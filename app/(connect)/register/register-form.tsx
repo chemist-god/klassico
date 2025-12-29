@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { register } from "@/lib/actions/auth";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CAPTCHA_CONFIG, ROUTES } from "@/lib/utils/constants";
 
-const CAPTCHA_QUESTION = 19 + 18;
-const CAPTCHA_ANSWER = 37;
+const CAPTCHA_QUESTION = CAPTCHA_CONFIG.REGISTER.question;
+const CAPTCHA_ANSWER = CAPTCHA_CONFIG.REGISTER.answer;
 
 export function RegisterForm() {
     const router = useRouter();
@@ -40,7 +41,7 @@ export function RegisterForm() {
 
             if (result.success && result.data) {
                 // Redirect to login with success message
-                router.push("/login?registered=true");
+                router.push(`${ROUTES.LOGIN}?registered=true`);
             } else {
                 setError(result.error || "Registration failed. Please try again.");
             }
