@@ -1,15 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-import { getCurrentUserId } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/require-auth";
+import { withErrorHandling } from "@/lib/utils/result";
 
 export async function getWallet() {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { success: false, error: "Not authenticated" };
-    }
-
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
     let wallet = await prisma.wallet.findUnique({
       where: { userId },
     });
@@ -24,19 +21,13 @@ export async function getWallet() {
       });
     }
 
-    return { success: true, data: wallet };
-  } catch (error) {
-    console.error("Error fetching wallet:", error);
-    return { success: false, error: "Failed to fetch wallet" };
-  }
+    return wallet;
+  }, "Failed to fetch wallet");
 }
 
 export async function generateWalletAddress() {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { success: false, error: "Not authenticated" };
-    }
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
 
     // Generate a wallet address (in real app, this would use crypto library)
     const address = `0x${Math.random().toString(16).substring(2, 42)}`;
@@ -51,10 +42,6 @@ export async function generateWalletAddress() {
       },
     });
 
-    return { success: true, data: wallet };
-  } catch (error) {
-    console.error("Error generating wallet address:", error);
-    return { success: false, error: "Failed to generate wallet address" };
-  }
+    return wallet;
+  }, "Failed to generate wallet address");
 }
-
