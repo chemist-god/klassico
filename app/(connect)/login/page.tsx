@@ -1,28 +1,31 @@
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { LoginForm } from "./login-form";
 
-const LoginPage = () => {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: { registered?: string };
+}) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-950">
       <div className="w-full max-w-md p-8 rounded-2xl shadow-xl bg-stone-900 flex flex-col gap-6">
         <div className="flex flex-col items-center mb-2">
-          <span className="text-3xl font-bold text-primary mb-2">Sign in to Kubera</span>
+          <span className="text-3xl font-bold text-primary mb-2">
+            Sign in to Kubera
+          </span>
+          {searchParams?.registered === "true" && (
+            <div className="mt-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+              Account created successfully! Please sign in.
+            </div>
+          )}
         </div>
-        <form className="flex flex-col gap-4">
-          <Input placeholder="Username" required />
-          <Input placeholder="Password" type="password" required />
-          <div className="flex items-center gap-2">
-            <Input className="w-24" placeholder="18 + 17 = ?" required />
-            <span className="text-xs text-muted-foreground">What's the answer?</span>
-          </div>
-          <Button className="w-full mt-2" type="submit">Sign in</Button>
-        </form>
+        <LoginForm />
         <div className="text-center text-sm text-muted-foreground mt-2">
-          Don't have an account? <a href="/register" className="text-primary hover:underline">Register</a>
+          Don't have an account?{" "}
+          <a href="/register" className="text-primary hover:underline">
+            Register
+          </a>
         </div>
       </div>
     </div>
   );
-};
-
-export default LoginPage;
+}
