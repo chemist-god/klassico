@@ -1,9 +1,5 @@
-// API Response types
-export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  success?: boolean;
-}
+// API Response types - Re-export ActionResult for consistency
+export type { ActionResult as ApiResponse } from "@/lib/utils/result";
 
 // Product types
 export interface Product {
