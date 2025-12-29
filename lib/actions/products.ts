@@ -1,32 +1,29 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
+import { withErrorHandling } from "@/lib/utils/result";
 
 export async function getProducts() {
-  try {
+  return withErrorHandling(async () => {
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" },
     });
-    return { success: true, data: products };
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    return { success: false, error: "Failed to fetch products" };
-  }
+    return products;
+  }, "Failed to fetch products");
 }
 
 export async function getProduct(id: string) {
-  try {
+  return withErrorHandling(async () => {
     const product = await prisma.product.findUnique({
       where: { id },
     });
+
     if (!product) {
-      return { success: false, error: "Product not found" };
+      throw new Error("Product not found");
     }
-    return { success: true, data: product };
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    return { success: false, error: "Failed to fetch product" };
-  }
+
+    return product;
+  }, "Failed to fetch product");
 }
 
 export async function createProduct(data: {
@@ -39,7 +36,7 @@ export async function createProduct(data: {
   type: string;
   description?: string;
 }) {
-  try {
+  return withErrorHandling(async () => {
     const product = await prisma.product.create({
       data: {
         name: data.name,
@@ -52,10 +49,6 @@ export async function createProduct(data: {
         description: data.description,
       },
     });
-    return { success: true, data: product };
-  } catch (error) {
-    console.error("Error creating product:", error);
-    return { success: false, error: "Failed to create product" };
-  }
+    return product;
+  }, "Failed to create product");
 }
-
