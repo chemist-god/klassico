@@ -1,12 +1,14 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getDashboardStats, getBankLogs } from "@/lib/actions/dashboard";
+import { getCurrentUser } from "@/lib/actions/user";
 import { AddToCartButton } from "@/app/shop/add-to-cart-button";
 
 export default async function DashboardPage() {
-  const [statsResult, bankLogsResult] = await Promise.all([
+  const [statsResult, bankLogsResult, userResult] = await Promise.all([
     getDashboardStats(),
     getBankLogs(),
+    getCurrentUser(),
   ]);
 
   const stats = statsResult.success && statsResult.data ? statsResult.data : {
@@ -15,10 +17,12 @@ export default async function DashboardPage() {
     awaitingProcessing: 0,
   };
   const bankLogs = bankLogsResult.success && bankLogsResult.data ? bankLogsResult.data : [];
+  const username = userResult.success && userResult.data ? userResult.data.username : "User";
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
       <div className="w-full max-w-6xl p-8">
-        <h1 className="text-4xl font-bold mb-2">Welcome, User!</h1>
+        <h1 className="text-4xl font-bold mb-2">Welcome, {username}!</h1>
         <p className="text-muted-foreground mb-8">Happy Shopping</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Card className="bg-linear-to-br from-stone-950 to-stone-900 border-none flex items-center justify-center">
