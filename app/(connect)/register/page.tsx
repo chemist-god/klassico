@@ -1,4 +1,5 @@
 import { RegisterForm } from "./register-form";
+import { ROUTES } from "@/lib/utils/constants";
 
 export default function RegisterPage() {
   return (
@@ -12,7 +13,7 @@ export default function RegisterPage() {
         <RegisterForm />
         <div className="text-center text-sm text-muted-foreground mt-2">
           Already have an account?{" "}
-          <a href="/login" className="text-primary hover:underline">
+          <a href={ROUTES.LOGIN} className="text-primary hover:underline">
             Sign in
           </a>
         </div>
