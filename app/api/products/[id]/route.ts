@@ -21,7 +21,16 @@ export const PUT = apiHandler(
       return { success: false, error: "Request and product ID are required" };
     }
     const { id } = await context.params;
-    const body = await parseRequestBody(request);
+    const body = await parseRequestBody<Partial<{
+      name: string;
+      price: number;
+      balance: number;
+      status: string;
+      region: string;
+      bank: string;
+      type: string;
+      description: string;
+    }>>(request);
 
     return await withErrorHandling(async () => {
       const product = await prisma.product.update({
