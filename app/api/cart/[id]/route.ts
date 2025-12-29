@@ -1,49 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { removeFromCart, updateCartItem } from "@/lib/actions/cart";
+import { apiHandler, parseRequestBody, validateRequiredFields } from "@/lib/utils/api-handler";
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const result = await removeFromCart(id);
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+export const DELETE = apiHandler(
+  async (request?: NextRequest, context?: { params?: Promise<{ id: string }> }) => {
+    if (!context?.params) {
+      return { success: false, error: "Cart item ID is required" };
     }
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    const { id } = await context.params;
+    return await removeFromCart(id);
   }
-}
+);
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const body = await request.json();
-    const { quantity } = body;
-    if (quantity === undefined) {
-      return NextResponse.json(
-        { error: "quantity is required" },
-        { status: 400 }
-      );
+export const PUT = apiHandler(
+  async (request?: NextRequest, context?: { params?: Promise<{ id: string }> }) => {
+    if (!request || !context?.params) {
+      return { success: false, error: "Request and cart item ID are required" };
     }
-    const result = await updateCartItem(id, quantity);
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+    const { id } = await context.params;
+    const body = await parseRequestBody<{ quantity: number }>(request);
+
+    const validation = validateRequiredFields(body, ["quantity"]);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
     }
-    return NextResponse.json({ data: result.data });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+
+    return await updateCartItem(id, body.quantity);
   }
-}
-
+);
