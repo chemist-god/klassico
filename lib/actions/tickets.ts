@@ -1,14 +1,17 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-
-// Placeholder userId - will be replaced with actual auth later
-const PLACEHOLDER_USER_ID = "placeholder-user-id";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export async function getTickets() {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     const tickets = await prisma.ticket.findMany({
-      where: { userId: PLACEHOLDER_USER_ID },
+      where: { userId },
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: tickets };
@@ -20,9 +23,14 @@ export async function getTickets() {
 
 export async function createTicket(data: { subject: string; message: string }) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     const ticket = await prisma.ticket.create({
       data: {
-        userId: PLACEHOLDER_USER_ID,
+        userId,
         subject: data.subject,
         message: data.message,
         status: "Open",
