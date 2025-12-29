@@ -1,17 +1,11 @@
 "use server";
 
-import { getSession } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/require-auth";
+import { withErrorHandling } from "@/lib/utils/result";
 
 export async function getCurrentUser() {
-    try {
-        const user = await getSession();
-        if (!user) {
-            return { success: false, error: "Not authenticated" };
-        }
-        return { success: true, data: user };
-    } catch (error) {
-        console.error("Error getting current user:", error);
-        return { success: false, error: "Failed to get user" };
-    }
+    return withErrorHandling(async () => {
+        const user = await requireUser();
+        return user;
+    }, "Failed to get user");
 }
-
