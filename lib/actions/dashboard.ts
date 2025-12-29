@@ -1,18 +1,21 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-
-// Placeholder userId - will be replaced with actual auth later
-const PLACEHOLDER_USER_ID = "placeholder-user-id";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export async function getDashboardStats() {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     const [wallet, orders] = await Promise.all([
       prisma.wallet.findUnique({
-        where: { userId: PLACEHOLDER_USER_ID },
+        where: { userId },
       }),
       prisma.order.findMany({
-        where: { userId: PLACEHOLDER_USER_ID },
+        where: { userId },
       }),
     ]);
 
