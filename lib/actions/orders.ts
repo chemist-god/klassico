@@ -1,15 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-import { getCurrentUserId } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/require-auth";
+import { withErrorHandling } from "@/lib/utils/result";
 
 export async function getOrders() {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { success: false, error: "Not authenticated" };
-    }
-
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
     const orders = await prisma.order.findMany({
       where: { userId },
       include: {
@@ -19,15 +16,13 @@ export async function getOrders() {
       },
       orderBy: { createdAt: "desc" },
     });
-    return { success: true, data: orders };
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return { success: false, error: "Failed to fetch orders" };
-  }
+    return orders;
+  }, "Failed to fetch orders");
 }
 
 export async function getOrder(orderId: string) {
-  try {
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -36,22 +31,23 @@ export async function getOrder(orderId: string) {
         },
       },
     });
+
     if (!order) {
-      return { success: false, error: "Order not found" };
+      throw new Error("Order not found");
     }
-    return { success: true, data: order };
-  } catch (error) {
-    console.error("Error fetching order:", error);
-    return { success: false, error: "Failed to fetch order" };
-  }
+
+    // Verify order belongs to user
+    if (order.userId !== userId) {
+      throw new Error("Unauthorized access to order");
+    }
+
+    return order;
+  }, "Failed to fetch order");
 }
 
 export async function createOrder(cartItemIds: string[]) {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { success: false, error: "Not authenticated" };
-    }
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
 
     // Get cart items
     const cartItems = await prisma.cartItem.findMany({
@@ -63,13 +59,14 @@ export async function createOrder(cartItemIds: string[]) {
     });
 
     if (cartItems.length === 0) {
-      return { success: false, error: "No items in cart" };
+      throw new Error("No items in cart");
     }
 
     // Calculate total
-    const total = cartItems.reduce((sum, item) => {
-      return sum + item.product.price * item.quantity;
-    }, 0);
+    const total = cartItems.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    );
 
     // Create order with items
     const order = await prisma.order.create({
@@ -100,10 +97,6 @@ export async function createOrder(cartItemIds: string[]) {
       },
     });
 
-    return { success: true, data: order };
-  } catch (error) {
-    console.error("Error creating order:", error);
-    return { success: false, error: "Failed to create order" };
-  }
+    return order;
+  }, "Failed to create order");
 }
-
