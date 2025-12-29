@@ -1,14 +1,17 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-
-// Placeholder userId - will be replaced with actual auth later
-const PLACEHOLDER_USER_ID = "placeholder-user-id";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export async function getCart() {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     const cartItems = await prisma.cartItem.findMany({
-      where: { userId: PLACEHOLDER_USER_ID },
+      where: { userId },
       include: { product: true },
       orderBy: { createdAt: "desc" },
     });
@@ -21,11 +24,16 @@ export async function getCart() {
 
 export async function addToCart(productId: string, quantity: number = 1) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     // Check if item already exists in cart
     const existingItem = await prisma.cartItem.findUnique({
       where: {
         userId_productId: {
-          userId: PLACEHOLDER_USER_ID,
+          userId,
           productId,
         },
       },
@@ -44,7 +52,7 @@ export async function addToCart(productId: string, quantity: number = 1) {
     // Create new cart item
     const cartItem = await prisma.cartItem.create({
       data: {
-        userId: PLACEHOLDER_USER_ID,
+        userId,
         productId,
         quantity,
       },
