@@ -1,14 +1,17 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-
-// Placeholder userId - will be replaced with actual auth later
-const PLACEHOLDER_USER_ID = "placeholder-user-id";
+import { getCurrentUserId } from "@/lib/auth/session";
 
 export async function getOrders() {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     const orders = await prisma.order.findMany({
-      where: { userId: PLACEHOLDER_USER_ID },
+      where: { userId },
       include: {
         items: {
           include: { product: true },
@@ -45,11 +48,16 @@ export async function getOrder(orderId: string) {
 
 export async function createOrder(cartItemIds: string[]) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
     // Get cart items
     const cartItems = await prisma.cartItem.findMany({
       where: {
         id: { in: cartItemIds },
-        userId: PLACEHOLDER_USER_ID,
+        userId,
       },
       include: { product: true },
     });
@@ -66,7 +74,7 @@ export async function createOrder(cartItemIds: string[]) {
     // Create order with items
     const order = await prisma.order.create({
       data: {
-        userId: PLACEHOLDER_USER_ID,
+        userId,
         total,
         status: "Pending",
         items: {
@@ -88,7 +96,7 @@ export async function createOrder(cartItemIds: string[]) {
     await prisma.cartItem.deleteMany({
       where: {
         id: { in: cartItemIds },
-        userId: PLACEHOLDER_USER_ID,
+        userId,
       },
     });
 
