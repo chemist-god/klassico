@@ -1,32 +1,29 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-// Protected routes that require authentication
-const protectedRoutes = ["/user", "/shop"];
-const authRoutes = ["/login", "/register"];
+import { ROUTES, SESSION_CONFIG } from "@/lib/utils/constants";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get("kubera_session");
+  const sessionCookie = request.cookies.get(SESSION_CONFIG.COOKIE_NAME);
 
   // Check if route is protected
-  const isProtectedRoute = protectedRoutes.some((route) =>
+  const isProtectedRoute = ROUTES.PROTECTED.some((route) =>
     pathname.startsWith(route)
   );
 
   // Check if route is auth route (login/register)
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  const isAuthRoute = ROUTES.AUTH.some((route) => pathname.startsWith(route));
 
   // Redirect to login if accessing protected route without session
   if (isProtectedRoute && !sessionCookie) {
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL(ROUTES.LOGIN, request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect to dashboard if accessing auth routes with active session
   if (isAuthRoute && sessionCookie) {
-    return NextResponse.redirect(new URL("/user/dashboard", request.url));
+    return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
   }
 
   return NextResponse.next();
