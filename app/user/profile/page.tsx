@@ -2,8 +2,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { getCurrentUser } from "@/lib/actions/user";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const userResult = await getCurrentUser();
+  const email = userResult.success && userResult.data
+    ? userResult.data.email
+    : "";
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
       <div className="w-full max-w-2xl p-8 flex flex-col items-center">
@@ -15,7 +21,7 @@ export default function ProfilePage() {
               <CardTitle>Email Address</CardTitle>
             </CardHeader>
             <CardContent>
-              <Input value="banel29009@gamintor.com" readOnly />
+              <Input value={email} readOnly />
               <Badge variant="secondary" className="mt-3 text-xs font-medium">Need to update your email? Please contact support for email address changes.</Badge>
             </CardContent>
           </Card>
