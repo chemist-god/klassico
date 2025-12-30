@@ -3,7 +3,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { withErrorHandling } from "@/lib/utils/result";
-import type { Order } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+type Order = Prisma.OrderGetPayload<{}>;
 
 export async function getDashboardStats() {
   return withErrorHandling(async () => {
