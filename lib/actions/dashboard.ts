@@ -3,9 +3,8 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { withErrorHandling } from "@/lib/utils/result";
-import type { Prisma } from "@prisma/client";
 
-type Order = Prisma.OrderGetPayload<{}>;
+type Order = Awaited<ReturnType<typeof prisma.order.findMany>>[number];
 
 export async function getDashboardStats() {
   return withErrorHandling(async () => {
