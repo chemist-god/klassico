@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { getDashboardStats, getBankLogs } from "@/lib/actions/dashboard";
 import { getCurrentUser } from "@/lib/actions/user";
 import { AddToCartButton } from "@/app/shop/add-to-cart-button";
+import { BankLog } from "@/lib/api/types";
 
 export default async function DashboardPage() {
   const [statsResult, bankLogsResult, userResult] = await Promise.all([
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
     totalCompleted: 0,
     awaitingProcessing: 0,
   };
-  const bankLogs = bankLogsResult.success && bankLogsResult.data ? bankLogsResult.data : [];
+  const bankLogs: BankLog[] = bankLogsResult.success && bankLogsResult.data ? bankLogsResult.data : [];
   const username = userResult.success && userResult.data ? userResult.data.username : "User";
 
   return (
@@ -74,7 +75,7 @@ export default async function DashboardPage() {
                     </td>
                   </tr>
                 ) : (
-                  bankLogs.map((log) => (
+                  bankLogs.map((log: BankLog) => (
                     <tr key={log.id} className="hover:bg-stone-900/60 transition">
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-2">
