@@ -64,7 +64,7 @@ export async function createOrder(cartItemIds: string[]) {
 
     // Calculate total
     const total = cartItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum: number, item) => sum + item.product.price * item.quantity,
       0
     );
 
