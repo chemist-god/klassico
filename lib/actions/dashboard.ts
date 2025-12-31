@@ -11,16 +11,18 @@ export async function getDashboardStats() {
     const [wallet, orders] = await Promise.all([
       prisma.wallet.findUnique({
         where: { userId },
+        select: { balance: true },
       }),
       prisma.order.findMany({
         where: { userId },
+        select: { status: true },
       }),
     ]);
 
     const availableFunds = wallet?.balance || 0;
-    const totalCompleted = orders.filter(({ status }) => status === "Completed").length;
+    const totalCompleted = orders.filter((order) => order.status === "Completed").length;
     const awaitingProcessing = orders.filter(
-      ({ status }) => status === "Pending" || status === "Processing"
+      (order) => order.status === "Pending" || order.status === "Processing"
     ).length;
 
     return {
