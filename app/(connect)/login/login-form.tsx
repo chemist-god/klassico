@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { login } from "@/lib/actions/auth";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CAPTCHA_CONFIG, ROUTES } from "@/lib/utils/constants";
-
-const CAPTCHA_QUESTION = CAPTCHA_CONFIG.LOGIN.question;
-const CAPTCHA_ANSWER = CAPTCHA_CONFIG.LOGIN.answer;
+import { ROUTES } from "@/lib/utils/constants";
+import { CaptchaInput } from "@/components/captcha/captcha-input";
 
 export function LoginForm() {
   const router = useRouter();
@@ -31,7 +29,6 @@ export function LoginForm() {
         username: formData.username,
         password: formData.password,
         captchaAnswer: formData.captchaAnswer,
-        captchaExpected: CAPTCHA_ANSWER,
       });
 
       if (result.success && result.data) {
@@ -76,19 +73,12 @@ export function LoginForm() {
         }
         disabled={isLoading}
       />
-      <div className="flex items-center gap-2">
-        <Input
-          className="w-24"
-          placeholder={`${CAPTCHA_QUESTION} = ?`}
-          required
-          value={formData.captchaAnswer}
-          onChange={(e) =>
-            setFormData({ ...formData, captchaAnswer: e.target.value })
-          }
-          disabled={isLoading}
-        />
-        <span className="text-xs text-muted-foreground">What's the answer?</span>
-      </div>
+      <CaptchaInput
+        value={formData.captchaAnswer}
+        onChange={(value) => setFormData({ ...formData, captchaAnswer: value })}
+        disabled={isLoading}
+        error={error && (error.toLowerCase().includes("captcha") || error.toLowerCase().includes("expired")) ? error : null}
+      />
       <Button className="w-full mt-2" type="submit" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign in"}
       </Button>
