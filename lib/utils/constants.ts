@@ -2,18 +2,6 @@
  * Application constants
  */
 
-// Captcha configurations
-export const CAPTCHA_CONFIG = {
-  LOGIN: {
-    question: 18 + 17,
-    answer: 35,
-  },
-  REGISTER: {
-    question: 19 + 18,
-    answer: 37,
-  },
-} as const;
-
 // Session configuration
 export const SESSION_CONFIG = {
   COOKIE_NAME: "kubera_session",
