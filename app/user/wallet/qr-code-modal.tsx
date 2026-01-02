@@ -34,7 +34,6 @@ export function QRCodeModal({ address, onClose }: QRCodeModalProps) {
                             value={bitcoinURI}
                             size={256}
                             level="M"
-                            includeMargin={true}
                         />
                     </div>
 
