@@ -1,0 +1,111 @@
+"use client";
+
+import { useState } from "react";
+import { Copy, Check, Eye, EyeOff, QrCode } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { QRCodeModal } from "./qr-code-modal";
+
+interface WalletAddressDisplayProps {
+    address: string;
+}
+
+export function WalletAddressDisplay({ address }: WalletAddressDisplayProps) {
+    const [copied, setCopied] = useState(false);
+    const [showFull, setShowFull] = useState(false);
+    const [showQR, setShowQR] = useState(false);
+    const { toast } = useToast();
+
+    // Format address: show first 10 + last 10 characters
+    const formatAddress = (addr: string) => {
+        if (addr.length <= 20) return addr;
+        return `${addr.slice(0, 10)}...${addr.slice(-10)}`;
+    };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(address);
+            setCopied(true);
+            toast({
+                title: "Address copied!",
+                description: "Bitcoin address has been copied to clipboard",
+                variant: "success",
+            });
+            setTimeout(() => setCopied(false), 2000);
+        } catch (error) {
+            toast({
+                title: "Failed to copy",
+                description: "Please try again or copy manually",
+                variant: "destructive",
+            });
+        }
+    };
+
+    return (
+        <>
+            <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-foreground">Bitcoin Address</h3>
+                </div>
+
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+                    <code className="flex-1 text-sm font-mono text-foreground break-all">
+                        {showFull ? address : formatAddress(address)}
+                    </code>
+
+                    <div className="flex items-center gap-1 ml-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowFull(!showFull)}
+                            className="h-8 w-8"
+                            aria-label={showFull ? "Hide full address" : "Show full address"}
+                        >
+                            {showFull ? (
+                                <EyeOff className="h-4 w-4" />
+                            ) : (
+                                <Eye className="h-4 w-4" />
+                            )}
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCopy}
+                            className="h-8 w-8"
+                            aria-label="Copy address"
+                        >
+                            {copied ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                                <Copy className="h-4 w-4" />
+                            )}
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowQR(true)}
+                            className="h-8 w-8"
+                            aria-label="Show QR code"
+                        >
+                            <QrCode className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                    Only send Bitcoin (BTC) to this address. Sending other cryptocurrencies may result in permanent loss.
+                </p>
+            </div>
+
+            {showQR && (
+                <QRCodeModal
+                    address={address}
+                    onClose={() => setShowQR(false)}
+                />
+            )}
+        </>
+    );
+}
+
