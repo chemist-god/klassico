@@ -4,111 +4,8 @@
  */
 
 import * as bitcoin from "bitcoinjs-lib";
-import { BIP32Factory, BIP32Interface } from "bip32";
-import { Point, Signature, utils, sign, verify, getPublicKey } from "@noble/secp256k1";
-import { randomBytes, createHash, pbkdf2Sync } from "crypto";
-
-// Curve order constant (secp256k1 curve order)
-const CURVE_ORDER = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
-
-// Helper function to convert Uint8Array to hex string
-function uint8ArrayToHex(arr: Uint8Array): string {
-    return Buffer.from(arr).toString('hex');
-}
-
-// Adapter to make @noble/secp256k1 compatible with BIP32's TinySecp256k1Interface
-const eccAdapter = {
-    isPoint(p: Uint8Array): boolean {
-        try {
-            Point.fromHex(uint8ArrayToHex(p));
-            return true;
-        } catch {
-            return false;
-        }
-    },
-    isPrivate(d: Uint8Array): boolean {
-        return utils.isValidSecretKey(d);
-    },
-    pointFromScalar(d: Uint8Array, compressed?: boolean): Uint8Array | null {
-        try {
-            const publicKey = getPublicKey(d, compressed !== false);
-            return new Uint8Array(publicKey);
-        } catch {
-            return null;
-        }
-    },
-    pointAddScalar(p: Uint8Array, tweak: Uint8Array, compressed?: boolean): Uint8Array | null {
-        try {
-            const point = Point.fromHex(uint8ArrayToHex(p));
-            const tweakPoint = Point.fromHex(uint8ArrayToHex(getPublicKey(tweak, compressed !== false)));
-            const newPoint = point.add(tweakPoint);
-            return new Uint8Array(newPoint.toBytes(compressed !== false));
-        } catch {
-            return null;
-        }
-    },
-    privateAdd(d: Uint8Array, tweak: Uint8Array): Uint8Array | null {
-        try {
-            const privateKey = BigInt('0x' + Buffer.from(d).toString('hex'));
-            const tweakValue = BigInt('0x' + Buffer.from(tweak).toString('hex'));
-            const newPrivateKey = (privateKey + tweakValue) % CURVE_ORDER;
-            if (newPrivateKey === BigInt(0)) return null;
-            const result = Buffer.from(newPrivateKey.toString(16).padStart(64, '0'), 'hex');
-            return new Uint8Array(result);
-        } catch {
-            return null;
-        }
-    },
-    privateSub(d: Uint8Array, tweak: Uint8Array): Uint8Array | null {
-        try {
-            const privateKey = BigInt('0x' + Buffer.from(d).toString('hex'));
-            const tweakValue = BigInt('0x' + Buffer.from(tweak).toString('hex'));
-            const newPrivateKey = (privateKey - tweakValue + CURVE_ORDER) % CURVE_ORDER;
-            if (newPrivateKey === BigInt(0)) return null;
-            const result = Buffer.from(newPrivateKey.toString(16).padStart(64, '0'), 'hex');
-            return new Uint8Array(result);
-        } catch {
-            return null;
-        }
-    },
-    sign(hash: Uint8Array, privateKey: Uint8Array, extraEntropy?: Uint8Array): { signature: Uint8Array; recovery: number } | null {
-        try {
-            const sig = sign(hash, privateKey, { extraEntropy });
-            // @noble/secp256k1 v3 returns Signature which is also Bytes
-            const sigBytes = sig instanceof Uint8Array ? sig : new Uint8Array(sig);
-            return {
-                signature: sigBytes,
-                recovery: (sig as any).recovery || 0,
-            };
-        } catch {
-            return null;
-        }
-    },
-    verify(hash: Uint8Array, q: Uint8Array, signature: Uint8Array, strict?: boolean): boolean {
-        try {
-            const point = Point.fromHex(uint8ArrayToHex(q));
-            // @noble/secp256k1 v3 verify takes signature bytes, hash, and public key
-            return verify(signature, hash, point.toBytes());
-        } catch {
-            return false;
-        }
-    },
-};
-
-// Lazy initialization of BIP32 to avoid module load-time errors
-let bip32Instance: ReturnType<typeof BIP32Factory> | null = null;
-
-function getBIP32() {
-    if (!bip32Instance) {
-        try {
-            bip32Instance = BIP32Factory(eccAdapter as any);
-        } catch (error) {
-            console.error("Failed to initialize BIP32:", error);
-            throw new Error(`BIP32 initialization failed: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
-    return bip32Instance;
-}
+import { HDKey } from "@scure/bip32";
+import { createHash, pbkdf2Sync } from "crypto";
 
 /**
  * Bitcoin network configuration
@@ -136,6 +33,11 @@ const DERIVATION_PATH = "m/44'/0'/0'/0/0";
  */
 export function generateBitcoinAddress(userId: string): string {
     try {
+        // Validate userId
+        if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
+            throw new Error("Invalid userId: userId must be a non-empty string");
+        }
+
         // Generate a deterministic seed from userId + master secret
         // In production, use a secure master key stored in environment variables
         const masterSecret = process.env.BITCOIN_MASTER_SECRET || "CHANGE_THIS_IN_PRODUCTION";
@@ -146,18 +48,30 @@ export function generateBitcoinAddress(userId: string): string {
 
         const seed = createDeterministicSeed(userId, masterSecret);
 
+        // Validate seed is not null/undefined and is a Buffer
+        if (!seed || !Buffer.isBuffer(seed)) {
+            throw new Error(`Invalid seed: seed must be a Buffer, got ${typeof seed}`);
+        }
+
         // Validate seed size (BIP32 requires 16-64 bytes)
         if (seed.length < 16 || seed.length > 64) {
             throw new Error(`Invalid seed size: ${seed.length} bytes. Must be 16-64 bytes.`);
         }
 
-        // Create root node from seed
-        const bip32 = getBIP32();
-        let root;
+        // Ensure seed is not empty
+        if (seed.length === 0) {
+            throw new Error("Invalid seed: seed is empty");
+        }
+
+        // Create root node from seed using @scure/bip32
+        let root: HDKey;
         try {
-            root = bip32.fromSeed(seed, NETWORK);
+            // @scure/bip32 expects Uint8Array, not Buffer
+            const seedArray = seed instanceof Uint8Array ? seed : new Uint8Array(seed);
+            root = HDKey.fromMasterSeed(seedArray);
         } catch (bip32Error) {
             console.error("BIP32 fromSeed error:", bip32Error);
+            console.error("Seed type:", typeof seed, "Seed length:", seed?.length);
             throw new Error(`BIP32 fromSeed failed: ${bip32Error instanceof Error ? bip32Error.message : String(bip32Error)}`);
         }
 
@@ -166,20 +80,36 @@ export function generateBitcoinAddress(userId: string): string {
         const addressIndex = hashToNumber(userId) % 2147483647; // Max BIP32 index
         const childPath = `m/44'/0'/0'/0/${addressIndex}`;
 
-        let child;
+        let child: HDKey;
         try {
-            child = root.derivePath(childPath);
+            child = root.derive(childPath);
         } catch (deriveError) {
             console.error("Key derivation error:", deriveError);
             throw new Error(`Key derivation failed: ${deriveError instanceof Error ? deriveError.message : String(deriveError)}`);
+        }
+
+        // Validate child and publicKey
+        if (!child) {
+            throw new Error("Failed to derive child key: child is null");
+        }
+
+        const publicKey = child.publicKey;
+        if (!publicKey) {
+            throw new Error("Failed to derive child key: publicKey is null or undefined");
+        }
+        if (!(publicKey instanceof Uint8Array)) {
+            throw new Error(`Invalid publicKey type: ${typeof publicKey}`);
         }
 
         // Generate P2WPKH (Pay-to-Witness-Public-Key-Hash) address (Bech32)
         // This is the modern, recommended format with lower fees
         let address;
         try {
+            // Convert Uint8Array to Buffer for bitcoinjs-lib
+            const pubkeyBuffer = Buffer.from(publicKey);
+
             const payment = bitcoin.payments.p2wpkh({
-                pubkey: child.publicKey,
+                pubkey: pubkeyBuffer,
                 network: NETWORK,
             });
             address = payment.address;
@@ -206,10 +136,34 @@ export function generateBitcoinAddress(userId: string): string {
  * BIP32 requires seed to be 16-64 bytes, we use 64 bytes for optimal security
  */
 function createDeterministicSeed(userId: string, masterSecret: string): Buffer {
+    if (!userId || typeof userId !== "string") {
+        throw new Error("userId must be a non-empty string");
+    }
+    if (!masterSecret || typeof masterSecret !== "string") {
+        throw new Error("masterSecret must be a non-empty string");
+    }
+
     const combined = `${userId}:${masterSecret}`;
+
     // Use PBKDF2 to derive a 64-byte seed (512 bits) for BIP32
     // This is more secure than just SHA256 and produces the optimal seed size
-    return pbkdf2Sync(combined, "bitcoin-wallet-seed", 10000, 64, "sha512");
+    try {
+        const seed = pbkdf2Sync(combined, "bitcoin-wallet-seed", 10000, 64, "sha512");
+
+        // Validate the result
+        if (!seed || !Buffer.isBuffer(seed)) {
+            throw new Error("PBKDF2 returned invalid seed");
+        }
+
+        if (seed.length !== 64) {
+            throw new Error(`PBKDF2 returned seed of wrong length: ${seed.length}, expected 64`);
+        }
+
+        return seed;
+    } catch (error) {
+        console.error("Error creating deterministic seed:", error);
+        throw new Error(`Failed to create seed: ${error instanceof Error ? error.message : String(error)}`);
+    }
 }
 
 /**
