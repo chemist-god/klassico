@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
-const nunitoSans = Nunito_Sans({variable:'--font-sans'});
+const nunitoSans = Nunito_Sans({ variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: "Kubera",
@@ -20,6 +21,7 @@ export default function RootLayout({
         className={`antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );
