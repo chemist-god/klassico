@@ -5,8 +5,95 @@
 
 import * as bitcoin from "bitcoinjs-lib";
 import { BIP32Factory, BIP32Interface } from "bip32";
-import * as ecc from "tiny-secp256k1";
+import { Point, Signature, utils, sign, verify, getPublicKey } from "@noble/secp256k1";
 import { randomBytes, createHash, pbkdf2Sync } from "crypto";
+
+// Curve order constant (secp256k1 curve order)
+const CURVE_ORDER = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
+
+// Helper function to convert Uint8Array to hex string
+function uint8ArrayToHex(arr: Uint8Array): string {
+    return Buffer.from(arr).toString('hex');
+}
+
+// Adapter to make @noble/secp256k1 compatible with BIP32's TinySecp256k1Interface
+const eccAdapter = {
+    isPoint(p: Uint8Array): boolean {
+        try {
+            Point.fromHex(uint8ArrayToHex(p));
+            return true;
+        } catch {
+            return false;
+        }
+    },
+    isPrivate(d: Uint8Array): boolean {
+        return utils.isValidSecretKey(d);
+    },
+    pointFromScalar(d: Uint8Array, compressed?: boolean): Uint8Array | null {
+        try {
+            const publicKey = getPublicKey(d, compressed !== false);
+            return new Uint8Array(publicKey);
+        } catch {
+            return null;
+        }
+    },
+    pointAddScalar(p: Uint8Array, tweak: Uint8Array, compressed?: boolean): Uint8Array | null {
+        try {
+            const point = Point.fromHex(uint8ArrayToHex(p));
+            const tweakPoint = Point.fromHex(uint8ArrayToHex(getPublicKey(tweak, compressed !== false)));
+            const newPoint = point.add(tweakPoint);
+            return new Uint8Array(newPoint.toBytes(compressed !== false));
+        } catch {
+            return null;
+        }
+    },
+    privateAdd(d: Uint8Array, tweak: Uint8Array): Uint8Array | null {
+        try {
+            const privateKey = BigInt('0x' + Buffer.from(d).toString('hex'));
+            const tweakValue = BigInt('0x' + Buffer.from(tweak).toString('hex'));
+            const newPrivateKey = (privateKey + tweakValue) % CURVE_ORDER;
+            if (newPrivateKey === BigInt(0)) return null;
+            const result = Buffer.from(newPrivateKey.toString(16).padStart(64, '0'), 'hex');
+            return new Uint8Array(result);
+        } catch {
+            return null;
+        }
+    },
+    privateSub(d: Uint8Array, tweak: Uint8Array): Uint8Array | null {
+        try {
+            const privateKey = BigInt('0x' + Buffer.from(d).toString('hex'));
+            const tweakValue = BigInt('0x' + Buffer.from(tweak).toString('hex'));
+            const newPrivateKey = (privateKey - tweakValue + CURVE_ORDER) % CURVE_ORDER;
+            if (newPrivateKey === BigInt(0)) return null;
+            const result = Buffer.from(newPrivateKey.toString(16).padStart(64, '0'), 'hex');
+            return new Uint8Array(result);
+        } catch {
+            return null;
+        }
+    },
+    sign(hash: Uint8Array, privateKey: Uint8Array, extraEntropy?: Uint8Array): { signature: Uint8Array; recovery: number } | null {
+        try {
+            const sig = sign(hash, privateKey, { extraEntropy });
+            // @noble/secp256k1 v3 returns Signature which is also Bytes
+            const sigBytes = sig instanceof Uint8Array ? sig : new Uint8Array(sig);
+            return {
+                signature: sigBytes,
+                recovery: (sig as any).recovery || 0,
+            };
+        } catch {
+            return null;
+        }
+    },
+    verify(hash: Uint8Array, q: Uint8Array, signature: Uint8Array, strict?: boolean): boolean {
+        try {
+            const point = Point.fromHex(uint8ArrayToHex(q));
+            // @noble/secp256k1 v3 verify takes signature bytes, hash, and public key
+            return verify(signature, hash, point.toBytes());
+        } catch {
+            return false;
+        }
+    },
+};
 
 // Lazy initialization of BIP32 to avoid module load-time errors
 let bip32Instance: ReturnType<typeof BIP32Factory> | null = null;
@@ -14,7 +101,7 @@ let bip32Instance: ReturnType<typeof BIP32Factory> | null = null;
 function getBIP32() {
     if (!bip32Instance) {
         try {
-            bip32Instance = BIP32Factory(ecc);
+            bip32Instance = BIP32Factory(eccAdapter as any);
         } catch (error) {
             console.error("Failed to initialize BIP32:", error);
             throw new Error(`BIP32 initialization failed: ${error instanceof Error ? error.message : String(error)}`);
