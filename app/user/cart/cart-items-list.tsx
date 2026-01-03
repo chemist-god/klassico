@@ -3,16 +3,97 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CartItem } from "@/lib/api/types";
-import { removeFromCart } from "@/lib/actions/cart";
+import { removeFromCart, updateCartItem } from "@/lib/actions/cart";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, Minus } from "lucide-react";
 
 export function CartItemsList({ cartItems }: { cartItems: CartItem[] }) {
   const [items, setItems] = useState(cartItems);
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
+  /**
+   * Update quantity of a cart item
+   */
+  async function handleUpdateQuantity(itemId: string, newQuantity: number) {
+    setUpdatingItems((prev) => new Set(prev).add(itemId));
+    try {
+      const result = await updateCartItem(itemId, newQuantity);
+      if (result.success && result.data) {
+        const updatedItem = result.data as CartItem;
+        
+        // Update local state
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.id === itemId ? updatedItem : item
+          )
+        );
+        
+        // Show success toast
+        const item = items.find((i) => i.id === itemId);
+        const itemName = item?.product.name || "Item";
+        
+        if (newQuantity > item!.quantity) {
+          toast({
+            variant: "default",
+            title: "Quantity Increased ✨",
+            description: `${itemName} quantity updated to ${newQuantity}.`,
+            duration: 2000,
+          });
+        } else {
+          toast({
+            variant: "default",
+            title: "Quantity Decreased",
+            description: `${itemName} quantity updated to ${newQuantity}.`,
+            duration: 2000,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error || "Failed to update quantity.",
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred.",
+        duration: 4000,
+      });
+    } finally {
+      setUpdatingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    }
+  }
+
+  /**
+   * Increase quantity by 1
+   */
+  function handleIncrease(item: CartItem) {
+    handleUpdateQuantity(item.id, item.quantity + 1);
+  }
+
+  /**
+   * Decrease quantity by 1
+   */
+  function handleDecrease(item: CartItem) {
+    if (item.quantity > 1) {
+      handleUpdateQuantity(item.id, item.quantity - 1);
+    }
+  }
+
+  /**
+   * Remove item completely from cart
+   */
   async function handleRemove(itemId: string) {
     setIsRemoving(itemId);
     try {
@@ -60,36 +141,83 @@ export function CartItemsList({ cartItems }: { cartItems: CartItem[] }) {
 
   return (
     <div className="w-full space-y-4">
-      {items.map((item: CartItem) => (
-        <Card key={item.id} className="p-4">
-          <CardContent className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold">{item.product.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                ${item.product.price} × {item.quantity}
-              </p>
-              <p className="text-primary font-bold">
-                ${(item.product.price * item.quantity).toLocaleString()}
-              </p>
-            </div>
-            <Button
-              onClick={() => handleRemove(item.id)}
-              disabled={isRemoving === item.id}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              {isRemoving === item.id ? "Removing..." : "Remove"}
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+      {items.map((item: CartItem) => {
+        const isUpdating = updatingItems.has(item.id);
+        const isRemovingItem = isRemoving === item.id;
+        
+        return (
+          <Card key={item.id} className="p-4">
+            <CardContent className="flex flex-col gap-4">
+              {/* Product Info */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    ${item.product.price.toFixed(2)} per item
+                  </p>
+                  <p className="text-primary font-bold text-xl">
+                    ${(item.product.price * item.quantity).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quantity Controls and Remove Button */}
+              <div className="flex items-center justify-between gap-4">
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">Quantity:</span>
+                  <div className="flex items-center gap-2 border rounded-lg p-1">
+                    <Button
+                      onClick={() => handleDecrease(item)}
+                      disabled={isUpdating || isRemovingItem || item.quantity <= 1}
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-8 w-8 rounded-md"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="min-w-[2rem] text-center font-semibold">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      onClick={() => handleIncrease(item)}
+                      disabled={isUpdating || isRemovingItem}
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-8 w-8 rounded-md"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Remove Button */}
+                <Button
+                  onClick={() => handleRemove(item.id)}
+                  disabled={isRemovingItem || isUpdating}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {isRemovingItem ? "Removing..." : "Remove"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
       <Card className="p-6">
         <CardContent className="flex justify-between items-center">
           <span className="text-xl font-bold">Total:</span>
           <span className="text-2xl font-bold text-primary">
-            ${total.toLocaleString()}
+            ${total.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </span>
         </CardContent>
       </Card>
