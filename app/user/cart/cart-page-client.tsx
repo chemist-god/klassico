@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, AlertCircle } from "lucide-react";
 import { CartTable } from "./cart-table";
@@ -8,6 +8,7 @@ import { CartItem } from "@/lib/api/types";
 import { createOrder } from "@/lib/actions/orders";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { removeFromCart } from "@/lib/actions/cart";
 
 interface CartPageClientProps {
     initialCartItems: CartItem[];
@@ -17,22 +18,97 @@ interface CartPageClientProps {
 }
 
 export function CartPageClient({
-    initialCartItems,
-    availableFunds,
-    total: initialTotal,
-    hasInsufficientBalance: initialHasInsufficientBalance,
+  initialCartItems,
+  availableFunds,
+  total: initialTotal,
+  hasInsufficientBalance: initialHasInsufficientBalance,
 }: CartPageClientProps) {
-    const [cartItems, setCartItems] = useState(initialCartItems);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const router = useRouter();
-    const { toast } = useToast();
+  const [cartItems, setCartItems] = useState(initialCartItems);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [cartStartTime, setCartStartTime] = useState<number | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
-    // Recalculate total when cart items change
-    const total = cartItems.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
-        0
-    );
-    const hasInsufficientBalance = availableFunds < total;
+  // Initialize cart start time when component mounts (only if cart has items)
+  useEffect(() => {
+    if (initialCartItems.length === 0) {
+      // Cart is empty, clear any existing timer
+      localStorage.removeItem("cartStartTime");
+      setCartStartTime(null);
+      return;
+    }
+
+    const storedTime = localStorage.getItem("cartStartTime");
+    if (storedTime) {
+      // Timer already exists, use it
+      setCartStartTime(parseInt(storedTime, 10));
+    } else {
+      // First time viewing cart with items, set start time
+      const startTime = Date.now();
+      localStorage.setItem("cartStartTime", startTime.toString());
+      setCartStartTime(startTime);
+    }
+  }, [initialCartItems.length]);
+
+  // Recalculate total when cart items change
+  const total = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+  const hasInsufficientBalance = availableFunds < total;
+
+  /**
+   * Handle cart expiration - clear all items
+   */
+  const handleCartExpired = async () => {
+    if (cartItems.length === 0) {
+      // Cart already empty, just clear the timer
+      localStorage.removeItem("cartStartTime");
+      setCartStartTime(null);
+      return;
+    }
+
+    toast({
+      variant: "destructive",
+      title: "Cart Expired ⏰",
+      description: "Your cart has expired and has been cleared. Please add items again.",
+      duration: 5000,
+    });
+
+    // Remove all cart items
+    try {
+      await Promise.all(
+        cartItems.map((item) => removeFromCart(item.id))
+      );
+      
+      // Clear cart start time
+      localStorage.removeItem("cartStartTime");
+      setCartStartTime(null);
+      
+      // Clear local state
+      setCartItems([]);
+      
+      // Refresh page to show empty cart
+      setTimeout(() => {
+        router.refresh();
+      }, 1000);
+    } catch (error) {
+      console.error("Error clearing expired cart:", error);
+    }
+  };
+
+  // Reset timer when cart becomes empty
+  useEffect(() => {
+    if (cartItems.length === 0 && cartStartTime) {
+      localStorage.removeItem("cartStartTime");
+      setCartStartTime(null);
+    } else if (cartItems.length > 0 && !cartStartTime) {
+      // Cart has items but no timer - set it now
+      const startTime = Date.now();
+      localStorage.setItem("cartStartTime", startTime.toString());
+      setCartStartTime(startTime);
+    }
+  }, [cartItems.length, cartStartTime]);
 
     const handleProceedToCheckout = async () => {
         if (hasInsufficientBalance) {
@@ -51,6 +127,10 @@ export function CartPageClient({
             const result = await createOrder(cartItemIds);
 
             if (result.success) {
+                // Clear cart timer on successful checkout
+                localStorage.removeItem("cartStartTime");
+                setCartStartTime(null);
+                
                 toast({
                     variant: "success",
                     title: "Order Created! 🎉",
@@ -84,10 +164,15 @@ export function CartPageClient({
         }
     };
 
-    return (
-        <div className="space-y-6">
-            {/* Cart Table */}
-            <CartTable cartItems={cartItems} onItemsChange={setCartItems} />
+  return (
+    <div className="space-y-6">
+      {/* Cart Table */}
+      <CartTable
+        cartItems={cartItems}
+        onItemsChange={setCartItems}
+        onCartExpired={handleCartExpired}
+        cartStartTime={cartStartTime}
+      />
 
             {/* Summary and Checkout Section */}
             <div className="flex justify-end">
