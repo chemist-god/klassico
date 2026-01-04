@@ -20,9 +20,10 @@ const POLLING_INTERVAL = 4000; // 4 seconds (less than 5s as requested)
 
 interface BankLogsTableProps {
   initialData?: BankLog[];
+  cartProductIds?: Set<string>;
 }
 
-export function BankLogsTable({ initialData = [] }: BankLogsTableProps) {
+export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: BankLogsTableProps) {
   const [bankLogs, setBankLogs] = useState<BankLog[]>(initialData);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +31,7 @@ export function BankLogsTable({ initialData = [] }: BankLogsTableProps) {
   const [selectedBank, setSelectedBank] = useState("All Banks");
   const [selectedPriceRange, setSelectedPriceRange] = useState("All Prices");
   const [currentPage, setCurrentPage] = useState(1);
+  const [inCartProducts, setInCartProducts] = useState<Set<string>>(cartProductIds);
 
   // Fetch bank logs from API
   const fetchBankLogs = async () => {
@@ -56,7 +58,7 @@ export function BankLogsTable({ initialData = [] }: BankLogsTableProps) {
     }
   };
 
-  // Real-time polling
+  // Real-time polling for bank logs
   useEffect(() => {
     // Initial fetch
     fetchBankLogs();
@@ -67,6 +69,36 @@ export function BankLogsTable({ initialData = [] }: BankLogsTableProps) {
     }, POLLING_INTERVAL);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch cart items to update "in cart" state
+  const fetchCartState = async () => {
+    try {
+      const response = await fetch("/api/cart");
+      if (response.ok) {
+        const result = await response.json();
+        const cartItems = result.data || result;
+        if (Array.isArray(cartItems)) {
+          const productIds = new Set(cartItems.map((item: any) => item.productId));
+          setInCartProducts(productIds);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch cart state:", error);
+    }
+  };
+
+  // Poll cart state periodically to update button states
+  useEffect(() => {
+    // Initial fetch
+    fetchCartState();
+
+    // Poll cart state every 5 seconds (less frequent than bank logs)
+    const cartInterval = setInterval(() => {
+      fetchCartState();
+    }, 5000);
+
+    return () => clearInterval(cartInterval);
   }, []);
 
   // Extract unique values for filters
@@ -386,7 +418,14 @@ export function BankLogsTable({ initialData = [] }: BankLogsTableProps) {
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <AddToCartButton productId={log.id} />
+                    <AddToCartButton
+                      productId={log.id}
+                      isInCart={inCartProducts.has(log.id)}
+                      onAddedToCart={() => {
+                        // Update local state immediately when item is added
+                        setInCartProducts((prev) => new Set(prev).add(log.id));
+                      }}
+                    />
                   </td>
                 </tr>
               ))
