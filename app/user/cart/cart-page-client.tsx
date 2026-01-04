@@ -9,6 +9,11 @@ import { createOrder } from "@/lib/actions/orders";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { removeFromCart } from "@/lib/actions/cart";
+import {
+  clearCartItemTimer,
+  getCartItemTimer,
+  setCartItemTimer,
+} from "@/lib/utils/cart-timers";
 
 interface CartPageClientProps {
     initialCartItems: CartItem[];
@@ -25,30 +30,19 @@ export function CartPageClient({
 }: CartPageClientProps) {
   const [cartItems, setCartItems] = useState(initialCartItems);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [cartStartTime, setCartStartTime] = useState<number | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
-  // Initialize cart start time when component mounts (only if cart has items)
+  // Initialize timers for items that don't have one yet
   useEffect(() => {
-    if (initialCartItems.length === 0) {
-      // Cart is empty, clear any existing timer
-      localStorage.removeItem("cartStartTime");
-      setCartStartTime(null);
-      return;
-    }
-
-    const storedTime = localStorage.getItem("cartStartTime");
-    if (storedTime) {
-      // Timer already exists, use it
-      setCartStartTime(parseInt(storedTime, 10));
-    } else {
-      // First time viewing cart with items, set start time
-      const startTime = Date.now();
-      localStorage.setItem("cartStartTime", startTime.toString());
-      setCartStartTime(startTime);
-    }
-  }, [initialCartItems.length]);
+    initialCartItems.forEach((item) => {
+      const existingTimer = getCartItemTimer(item.id);
+      if (!existingTimer) {
+        // Item doesn't have a timer, initialize it now
+        setCartItemTimer(item.id);
+      }
+    });
+  }, [initialCartItems]);
 
   // Recalculate total when cart items change
   const total = cartItems.reduce(
@@ -58,57 +52,40 @@ export function CartPageClient({
   const hasInsufficientBalance = availableFunds < total;
 
   /**
-   * Handle cart expiration - clear all items
+   * Handle individual item expiration - remove only that item
    */
-  const handleCartExpired = async () => {
-    if (cartItems.length === 0) {
-      // Cart already empty, just clear the timer
-      localStorage.removeItem("cartStartTime");
-      setCartStartTime(null);
-      return;
-    }
+  const handleItemExpired = async (itemId: string) => {
+    const expiredItem = cartItems.find((item) => item.id === itemId);
+    if (!expiredItem) return;
+
+    const itemName = expiredItem.product.name || "Item";
 
     toast({
       variant: "destructive",
-      title: "Cart Expired ⏰",
-      description: "Your cart has expired and has been cleared. Please add items again.",
+      title: "Item Expired ⏰",
+      description: `${itemName} has expired and has been removed from your cart.`,
       duration: 5000,
     });
 
-    // Remove all cart items
     try {
-      await Promise.all(
-        cartItems.map((item) => removeFromCart(item.id))
-      );
+      // Remove the expired item
+      await removeFromCart(itemId);
       
-      // Clear cart start time
-      localStorage.removeItem("cartStartTime");
-      setCartStartTime(null);
+      // Clear the item's timer
+      clearCartItemTimer(itemId);
       
-      // Clear local state
-      setCartItems([]);
-      
-      // Refresh page to show empty cart
-      setTimeout(() => {
-        router.refresh();
-      }, 1000);
+      // Remove from local state
+      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
     } catch (error) {
-      console.error("Error clearing expired cart:", error);
+      console.error("Error removing expired item:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove expired item.",
+        duration: 4000,
+      });
     }
   };
-
-  // Reset timer when cart becomes empty
-  useEffect(() => {
-    if (cartItems.length === 0 && cartStartTime) {
-      localStorage.removeItem("cartStartTime");
-      setCartStartTime(null);
-    } else if (cartItems.length > 0 && !cartStartTime) {
-      // Cart has items but no timer - set it now
-      const startTime = Date.now();
-      localStorage.setItem("cartStartTime", startTime.toString());
-      setCartStartTime(startTime);
-    }
-  }, [cartItems.length, cartStartTime]);
 
     const handleProceedToCheckout = async () => {
         if (hasInsufficientBalance) {
@@ -127,9 +104,10 @@ export function CartPageClient({
             const result = await createOrder(cartItemIds);
 
             if (result.success) {
-                // Clear cart timer on successful checkout
-                localStorage.removeItem("cartStartTime");
-                setCartStartTime(null);
+                // Clear all cart item timers on successful checkout
+                cartItems.forEach((item) => {
+                  clearCartItemTimer(item.id);
+                });
                 
                 toast({
                     variant: "success",
@@ -170,8 +148,7 @@ export function CartPageClient({
       <CartTable
         cartItems={cartItems}
         onItemsChange={setCartItems}
-        onCartExpired={handleCartExpired}
-        cartStartTime={cartStartTime}
+        onItemExpired={handleItemExpired}
       />
 
             {/* Summary and Checkout Section */}
