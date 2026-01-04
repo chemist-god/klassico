@@ -4,6 +4,7 @@ import { ActionButton } from "@/components/common/action-button";
 import { ShoppingCart } from "lucide-react";
 import { addToCart } from "@/lib/actions/cart";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface CartItemData {
   id: string;
@@ -15,6 +16,7 @@ interface CartItemData {
 
 export function AddToCartButton({ productId }: { productId: string }) {
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleAddToCart = async () => {
     const result = await addToCart(productId, 1);
@@ -28,7 +30,7 @@ export function AddToCartButton({ productId }: { productId: string }) {
       const isUpdate = cartItem.quantity > 1;
       
       if (isUpdate) {
-        // Item already in cart, quantity updated
+        // Item already in cart, quantity updated - don't redirect
         toast({
           variant: "default",
           title: "Quantity Updated ✨",
@@ -36,13 +38,18 @@ export function AddToCartButton({ productId }: { productId: string }) {
           duration: 3000,
         });
       } else {
-        // New item added
+        // New item added - show redirecting message and redirect
         toast({
           variant: "success",
-          title: "Added to Cart! 🎉",
-          description: `${productName} has been added to your cart.`,
-          duration: 3000,
+          title: "Product Added to Cart! 🎉",
+          description: "Redirecting to cart...",
+          duration: 2000,
         });
+        
+        // Redirect to cart page after a short delay
+        setTimeout(() => {
+          router.push("/user/cart");
+        }, 500);
       }
     } else {
       // Handle different error scenarios
