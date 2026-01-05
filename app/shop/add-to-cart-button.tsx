@@ -114,7 +114,7 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
     return (
       <Button
         disabled
-        className="mt-2 bg-green-600/20 hover:bg-green-600/20 text-green-400 border border-green-600/30 flex items-center gap-2 px-4 py-2 rounded-full cursor-not-allowed"
+        className="w-full bg-green-500/10 hover:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30 flex items-center justify-center gap-2 rounded-xl cursor-not-allowed shadow-sm"
       >
         <Check className="w-4 h-4" />
         Added to Cart
@@ -125,8 +125,8 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
   return (
     <ActionButton
       action={handleAddToCart}
-      loadingText="Adding..."
-      className="mt-2 bg-primary hover:bg-primary/90 text-white flex items-center gap-2 px-4 py-2 rounded-full shadow transition-transform duration-150 active:scale-95"
+      loadingText="Adding to Cart..."
+      className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
       icon={<ShoppingCart className="w-4 h-4" />}
     >
       Add to Cart
