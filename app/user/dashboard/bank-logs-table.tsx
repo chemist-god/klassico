@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { AddToCartButton } from "@/app/shop/add-to-cart-button";
 import { BankLog } from "@/lib/api/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getBankLogo } from "@/lib/utils/bank-logos";
 
 const ITEMS_PER_PAGE = 6;
 const POLLING_INTERVAL = 4000; // 4 seconds (less than 5s as requested)
@@ -379,12 +381,27 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="rounded-full px-2 py-1 text-xs font-semibold bg-primary/10 text-primary"
-                      >
-                        {getBankInitials(log.bank)}
-                      </Badge>
+                      {(() => {
+                        const logoPath = getBankLogo(log.bank);
+                        return logoPath ? (
+                          <div className="w-12 h-12 flex-shrink-0 rounded-full overflow-hidden bg-white border border-border/50 flex items-center justify-center relative">
+                            <Image
+                              src={logoPath}
+                              alt={`${log.bank} logo`}
+                              width={48}
+                              height={48}
+                              className="absolute inset-0 w-full h-full object-contain scale-125"
+                            />
+                          </div>
+                        ) : (
+                          <Badge
+                            variant="secondary"
+                            className="rounded-full px-2 py-1 text-xs font-semibold bg-primary/10 text-primary"
+                          >
+                            {getBankInitials(log.bank)}
+                          </Badge>
+                        );
+                      })()}
                       <div>
                         <div className="font-semibold text-sm">{log.product}</div>
                         <div className="text-xs text-muted-foreground">
