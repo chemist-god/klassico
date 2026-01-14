@@ -26,6 +26,11 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const regionParam = (params.region as string) || "all";
   const priceParam = (params.price as string) || "all";
 
+  // Advanced Params
+  const banksParam = (params.banks as string) || "";
+  const minBalParam = parseFloat(params.min as string) || 0;
+  const maxBalParam = parseFloat(params.max as string) || Infinity;
+
   let products = allProducts.filter((product) => {
     // Search Filter
     const matchesSearch = query
@@ -39,7 +44,16 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       ? product.region.toLowerCase() === regionParam.toLowerCase()
       : true;
 
-    return matchesSearch && matchesRegion;
+    // Bank Filter
+    const matchesBank = banksParam
+      ? banksParam.split(",").some(b => product.bank.toLowerCase().includes(b.toLowerCase()))
+      : true;
+
+    // Balance Range Filter
+    const matchesBalance = product.balance >= minBalParam &&
+      (maxBalParam === Infinity ? true : product.balance <= maxBalParam);
+
+    return matchesSearch && matchesRegion && matchesBank && matchesBalance;
   });
 
   // Price Sort
