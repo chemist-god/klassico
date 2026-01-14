@@ -3,8 +3,8 @@ import { ROUTES } from "@/lib/utils/constants";
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-950">
-      <div className="w-full max-w-md p-8 rounded-2xl shadow-xl bg-stone-900 flex flex-col gap-6">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md p-8 rounded-2xl shadow-xl bg-card border border-border flex flex-col gap-6">
         <div className="flex flex-col items-center mb-2">
           <span className="text-3xl font-bold text-primary mb-2">
             Create your account
