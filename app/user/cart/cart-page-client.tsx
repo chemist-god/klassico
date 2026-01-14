@@ -16,10 +16,10 @@ import {
 } from "@/lib/utils/cart-timers";
 
 interface CartPageClientProps {
-    initialCartItems: CartItem[];
-    availableFunds: number;
-    total: number;
-    hasInsufficientBalance: boolean;
+  initialCartItems: CartItem[];
+  availableFunds: number;
+  total: number;
+  hasInsufficientBalance: boolean;
 }
 
 export function CartPageClient({
@@ -70,10 +70,10 @@ export function CartPageClient({
     try {
       // Remove the expired item
       await removeFromCart(itemId);
-      
+
       // Clear the item's timer
       clearCartItemTimer(itemId);
-      
+
       // Remove from local state
       setCartItems((prev) => prev.filter((item) => item.id !== itemId));
     } catch (error) {
@@ -87,60 +87,60 @@ export function CartPageClient({
     }
   };
 
-    const handleProceedToCheckout = async () => {
-        if (hasInsufficientBalance) {
-            toast({
-                variant: "destructive",
-                title: "Insufficient Balance",
-                description: "Please top up your account to proceed with checkout.",
-                duration: 4000,
-            });
-            return;
-        }
+  const handleProceedToCheckout = async () => {
+    if (hasInsufficientBalance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: "Please top up your account to proceed with checkout.",
+        duration: 4000,
+      });
+      return;
+    }
 
-        setIsProcessing(true);
-        try {
-            const cartItemIds = cartItems.map((item) => item.id);
-            const result = await createOrder(cartItemIds);
+    setIsProcessing(true);
+    try {
+      const cartItemIds = cartItems.map((item) => item.id);
+      const result = await createOrder(cartItemIds);
 
-            if (result.success) {
-                // Clear all cart item timers on successful checkout
-                cartItems.forEach((item) => {
-                  clearCartItemTimer(item.id);
-                });
-                
-                toast({
-                    variant: "success",
-                    title: "Order Created! 🎉",
-                    description: "Your order has been successfully created.",
-                    duration: 3000,
-                });
+      if (result.success) {
+        // Clear all cart item timers on successful checkout
+        cartItems.forEach((item) => {
+          clearCartItemTimer(item.id);
+        });
 
-                // Redirect to orders page
-                setTimeout(() => {
-                    router.push("/user/orders");
-                    router.refresh();
-                }, 1000);
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: result.error || "Failed to create order.",
-                    duration: 4000,
-                });
-            }
-        } catch (error) {
-            console.error("Error creating order:", error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "An unexpected error occurred while creating the order.",
-                duration: 4000,
-            });
-        } finally {
-            setIsProcessing(false);
-        }
-    };
+        toast({
+          variant: "success",
+          title: "Order Created! 🎉",
+          description: "Your order has been successfully created.",
+          duration: 3000,
+        });
+
+        // Redirect to orders page
+        setTimeout(() => {
+          router.push("/user/orders");
+          router.refresh();
+        }, 1000);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error || "Failed to create order.",
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred while creating the order.",
+        duration: 4000,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -151,41 +151,63 @@ export function CartPageClient({
         onItemExpired={handleItemExpired}
       />
 
-            {/* Summary and Checkout Section */}
-            <div className="flex justify-end">
-                <div className="w-full max-w-md space-y-4">
-                    {/* Total Amount */}
-                    <div className="flex flex-col items-end gap-2">
-                        <span className="text-sm text-muted-foreground">Total Amount:</span>
-                        <span className="text-3xl font-bold">
-                            ${total.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            })}
-                        </span>
-                    </div>
+      {/* Summary and Checkout Section */}
+      <div className="flex justify-end pt-4">
+        <div className="w-full max-w-md space-y-6 p-6 md:p-8 rounded-3xl bg-card/50 backdrop-blur-xl border border-white/10 shadow-2xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Order Summary</h3>
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">{cartItems.length} Items</span>
+          </div>
 
-                    {/* Proceed to Checkout Button */}
-                    <Button
-                        onClick={handleProceedToCheckout}
-                        disabled={isProcessing || hasInsufficientBalance || cartItems.length === 0}
-                        className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2 py-6 text-lg font-semibold"
-                        size="lg"
-                    >
-                        <FileText className="w-5 h-5" />
-                        {isProcessing ? "Processing..." : "Proceed to Checkout"}
-                    </Button>
-
-                    {/* Insufficient Balance Error */}
-                    {hasInsufficientBalance && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                            <AlertCircle className="w-4 h-4" />
-                            <span>Insufficient balance. Please top up your account.</span>
-                        </div>
-                    )}
-                </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Subtotal</span>
+              <span>${total.toFixed(2)}</span>
             </div>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Processing Fee</span>
+              <span>$0.00</span>
+            </div>
+            <div className="h-px bg-border/50 my-2" />
+            <div className="flex items-center justify-between">
+              <span className="text-base font-medium text-foreground">Total Amount</span>
+              <span className="text-3xl font-bold text-primary tracking-tight">
+                ${total.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* Proceed to Checkout Button */}
+          <div className="space-y-3">
+            <Button
+              onClick={handleProceedToCheckout}
+              disabled={isProcessing || hasInsufficientBalance || cartItems.length === 0}
+              className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2 text-lg font-semibold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {isProcessing ? (
+                "Processing..."
+              ) : (
+                <>
+                  <FileText className="w-5 h-5" />
+                  Checkout
+                </>
+              )}
+            </Button>
+
+            {/* Insufficient Balance Error */}
+            {hasInsufficientBalance && (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3 text-destructive text-sm">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <span className="font-medium leading-tight">Insufficient balance. Please top up your wallet to ensure a smooth checkout.</span>
+              </div>
+            )}
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
