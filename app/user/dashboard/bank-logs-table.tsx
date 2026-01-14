@@ -257,18 +257,18 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col">
       {/* Filters Section */}
       {/* Filters Section */}
-      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="p-4 bg-background/50 backdrop-blur-sm border-b border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-all">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground ml-1">
             Search
           </label>
-          <div className="relative">
+          <div className="relative group">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -284,16 +284,16 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9"
+              className="w-full pl-9 h-10 bg-muted/30 border-white/10 focus:bg-background focus:border-primary/50 rounded-xl transition-all"
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground ml-1">
             Region
           </label>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-10 bg-muted/30 border-white/10 focus:bg-background focus:border-primary/50 rounded-xl transition-all">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -305,12 +305,12 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Banks
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground ml-1">
+            Bank
           </label>
           <Select value={selectedBank} onValueChange={setSelectedBank}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-10 bg-muted/30 border-white/10 focus:bg-background focus:border-primary/50 rounded-xl transition-all">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -322,15 +322,15 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground ml-1">
             Price Range
           </label>
           <Select
             value={selectedPriceRange}
             onValueChange={setSelectedPriceRange}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-10 bg-muted/30 border-white/10 focus:bg-background focus:border-primary/50 rounded-xl transition-all">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -347,30 +347,30 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
       {/* Table Section */}
       <div className="overflow-x-auto rounded-xl shadow bg-card">
         <table className="min-w-full divide-y divide-border">
-          <thead className="bg-muted/50">
+          <thead className="bg-muted/30 border-b border-white/5">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Product
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Description
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Bank
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Balance
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Price
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Region
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+              <th className="px-4 py-4 text-left text-xs font-medium text-muted-foreground">
                 Status
               </th>
-              <th className="px-4 py-3"></th>
+              <th className="px-4 py-4"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
