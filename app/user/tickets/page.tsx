@@ -10,32 +10,26 @@ export default async function TicketsPage() {
   const tickets = result.success && result.data ? result.data : [];
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-      <div className="w-full max-w-2xl p-8 flex flex-col items-center">
-        <h1 className="text-3xl font-bold mb-2">Support Chat</h1>
-        <p className="mb-8 text-muted-foreground">Get help from our support team</p>
+    <main className="min-h-screen bg-background text-foreground py-10 px-4 md:px-8">
+      <div className="w-full max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Support Chat</h1>
+          <p className="text-muted-foreground text-lg font-light">Get help from our support team</p>
+        </div>
+
         {tickets.length === 0 ? (
-          <>
-            <Card className="p-12 flex flex-col items-center w-full mb-6">
-              <CardContent className="flex flex-col items-center">
-                <svg width="48" height="48" fill="none" className="mb-4 text-primary"><rect width="48" height="48" rx="12" fill="var(--card)"/><circle cx="24" cy="24" r="12" stroke="#0ea5e9" strokeWidth="2"/></svg>
-                <span className="text-xl font-semibold mb-2">No Active Chat</span>
-                <span className="mb-4 text-muted-foreground">Support chat available</span>
-                <CreateTicketButton />
-              </CardContent>
-            </Card>
-            <Card className="p-8 flex flex-col items-center w-full">
-              <CardContent className="flex flex-col items-center">
-                <span className="text-lg font-semibold mb-2">Need Help?</span>
-                <span className="mb-4 text-muted-foreground">
-                  Click{" "}
-                  <span className="font-medium text-foreground">Open Chat</span>{" "}
-                  to start a conversation with our support team.
-                </span>
-                <CreateTicketButton />
-              </CardContent>
-            </Card>
-          </>
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-border/50 rounded-3xl bg-muted/5">
+              <div className="w-16 h-16 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center mb-6">
+                <MessageCircle className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">No Active Chat</h3>
+              <p className="text-muted-foreground mb-6 max-w-sm text-center">
+                Start a conversation with our support team to get assistance with your orders or account.
+              </p>
+              <CreateTicketButton />
+            </div>
+          </div>
         ) : (
           <TicketsList tickets={tickets} />
         )}
