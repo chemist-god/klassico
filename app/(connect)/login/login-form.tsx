@@ -62,6 +62,7 @@ export function LoginForm() {
           setFormData({ ...formData, username: e.target.value })
         }
         disabled={isLoading}
+        className="h-11 bg-muted/30 border-white/10 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
       />
       <Input
         placeholder="Password"
@@ -72,6 +73,7 @@ export function LoginForm() {
           setFormData({ ...formData, password: e.target.value })
         }
         disabled={isLoading}
+        className="h-11 bg-muted/30 border-white/10 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
       />
       <CaptchaInput
         value={formData.captchaAnswer}
@@ -79,7 +81,7 @@ export function LoginForm() {
         disabled={isLoading}
         error={error && (error.toLowerCase().includes("captcha") || error.toLowerCase().includes("expired")) ? error : null}
       />
-      <Button className="w-full mt-2" type="submit" disabled={isLoading}>
+      <Button className="w-full mt-4 h-11 text-base font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all" type="submit" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign in"}
       </Button>
     </form>
