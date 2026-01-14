@@ -11,8 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, SlidersHorizontal, X } from "lucide-react";
-import { useDebounce } from "@/lib/hooks/use-debounce"; // We might need to create this hook if it doesn't exist, or just use setTimeout
+import { Search, SlidersHorizontal, X, Check } from "lucide-react";
 import {
     Sheet,
     SheetContent,
@@ -20,67 +19,96 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
+    SheetFooter,
+    SheetClose,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function ShopFilters() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // State
+    // Basic State
     const [search, setSearch] = useState(searchParams.get("q") || "");
     const [region, setRegion] = useState(searchParams.get("region") || "all");
     const [price, setPrice] = useState(searchParams.get("price") || "all");
+
+    // Advanced State
     const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+    const [selectedBanks, setSelectedBanks] = useState<string[]>(
+        searchParams.get("banks")?.split(",").filter(Boolean) || []
+    );
+    const [minBal, setMinBal] = useState(searchParams.get("min") || "");
+    const [maxBal, setMaxBal] = useState(searchParams.get("max") || "");
 
     // Debounce search
     useEffect(() => {
         const timeout = setTimeout(() => {
-            updateFilters({ q: search });
+            // Only update search query on debounce, other filters update immediately/on-apply
+            const params = new URLSearchParams(searchParams.toString());
+            if (search) params.set("q", search);
+            else params.delete("q");
+            router.push(`/shop?${params.toString()}`, { scroll: false });
         }, 300);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Update URL function
-    const updateFilters = useCallback(
-        (updates: Record<string, string | null>) => {
-            const params = new URLSearchParams(searchParams.toString());
+    // Helper to push updates
+    const updateParams = (updates: Record<string, string | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === "" || value === "all") {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+        router.push(`/shop?${params.toString()}`, { scroll: false });
+    };
 
-            Object.entries(updates).forEach(([key, value]) => {
-                if (value === null || value === "" || value === "all") {
-                    params.delete(key);
-                } else {
-                    params.set(key, value);
-                }
-            });
-
-            router.push(`/shop?${params.toString()}`, { scroll: false });
-        },
-        [router, searchParams]
-    );
-
-    // Handlers
     const handleRegionChange = (val: string) => {
         setRegion(val);
-        updateFilters({ region: val });
+        updateParams({ region: val });
     };
 
     const handlePriceChange = (val: string) => {
         setPrice(val);
-        updateFilters({ price: val });
+        updateParams({ price: val });
+    };
+
+    const toggleBank = (bank: string) => {
+        setSelectedBanks(prev =>
+            prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]
+        );
+    };
+
+    const applyAdvancedFilters = () => {
+        updateParams({
+            banks: selectedBanks.length > 0 ? selectedBanks.join(",") : null,
+            min: minBal,
+            max: maxBal,
+        });
+        setIsAdvancedOpen(false);
     };
 
     const clearFilters = () => {
         setSearch("");
         setRegion("all");
         setPrice("all");
+        setSelectedBanks([]);
+        setMinBal("");
+        setMaxBal("");
         router.push("/shop");
     };
 
     const activeFilterCount = [
         searchParams.get("q"),
-        searchParams.get("region"),
-        searchParams.get("price"),
+        searchParams.get("region") !== "all" ? "region" : null,
+        searchParams.get("price") !== "all" ? "price" : null,
+        searchParams.get("banks") ? "banks" : null,
+        searchParams.get("min") ? "min" : null,
+        searchParams.get("max") ? "max" : null,
     ].filter(Boolean).length;
 
     return (
@@ -144,43 +172,85 @@ export function ShopFilters() {
                                 )}
                             </Button>
                         </SheetTrigger>
-                        <SheetContent>
+                        <SheetContent className="overflow-y-auto w-full sm:max-w-md">
                             <SheetHeader>
                                 <SheetTitle>Advanced Filters</SheetTitle>
                                 <SheetDescription>
                                     Refine your search with specific parameters.
                                 </SheetDescription>
                             </SheetHeader>
-                            <div className="py-6 space-y-6">
-                                {/* Advanced Filter Placeholders */}
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Bank Type</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {['Chase', 'BOA', 'Wells', 'Citi'].map(bank => (
-                                            <div key={bank} className="flex items-center space-x-2 border rounded-lg p-2 hover:bg-muted/50 cursor-pointer">
-                                                <div className="h-4 w-4 rounded border border-primary/20" />
-                                                <span className="text-sm">{bank}</span>
+                            <div className="py-6 space-y-8 px-1">
+                                {/* Bank Type Selection */}
+                                <div className="space-y-4">
+                                    <h4 className="text-sm font-medium leading-none">Bank Type</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {['Chase', 'BOA', 'Wells', 'Citi', 'Barclays', 'Chime'].map(bank => {
+                                            const isSelected = selectedBanks.includes(bank);
+                                            return (
+                                                <div
+                                                    key={bank}
+                                                    onClick={() => toggleBank(bank)}
+                                                    className={cn(
+                                                        "flex items-center space-x-3 border rounded-xl p-3 cursor-pointer transition-all duration-200 select-none",
+                                                        isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted/50"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "h-5 w-5 shrink-0 rounded border flex items-center justify-center transition-colors",
+                                                        isSelected ? "bg-primary border-primary" : "border-muted-foreground"
+                                                    )}>
+                                                        {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                                                    </div>
+                                                    <span className="text-sm font-medium">{bank}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Balance Range */}
+                                <div className="space-y-4">
+                                    <h4 className="text-sm font-medium leading-none">Balance Range</h4>
+                                    <div className="flex items-end gap-3">
+                                        <div className="space-y-2 flex-1">
+                                            <label className="text-xs font-medium text-muted-foreground">Minimum</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                                                <Input
+                                                    placeholder="0"
+                                                    type="number"
+                                                    className="pl-7 h-11 bg-background"
+                                                    value={minBal}
+                                                    onChange={(e) => setMinBal(e.target.value)}
+                                                />
                                             </div>
-                                        ))}
+                                        </div>
+                                        <div className="pb-3 text-muted-foreground font-medium">-</div>
+                                        <div className="space-y-2 flex-1">
+                                            <label className="text-xs font-medium text-muted-foreground">Maximum</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                                                <Input
+                                                    placeholder="Any"
+                                                    type="number"
+                                                    className="pl-7 h-11 bg-background"
+                                                    value={maxBal}
+                                                    onChange={(e) => setMaxBal(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Balance Range</h4>
-                                    <div className="flex items-center gap-2">
-                                        <Input placeholder="Min" type="number" className="h-9" />
-                                        <span className="text-muted-foreground">-</span>
-                                        <Input placeholder="Max" type="number" className="h-9" />
-                                    </div>
+                                {/* Footer Actions */}
+                                <div className="flex flex-col gap-3 pt-6 border-t border-border/50">
+                                    <Button className="w-full h-11 font-medium text-base shadow-sm" onClick={applyAdvancedFilters}>
+                                        Apply Filters
+                                    </Button>
+                                    <Button variant="ghost" className="w-full text-muted-foreground hover:text-destructive h-auto py-2" onClick={clearFilters}>
+                                        Reset All Filters
+                                    </Button>
                                 </div>
-
-                                <Button className="w-full" onClick={() => setIsAdvancedOpen(false)}>
-                                    Apply Filters
-                                </Button>
-
-                                <Button variant="ghost" className="w-full text-muted-foreground" onClick={clearFilters}>
-                                    Reset All Filters
-                                </Button>
                             </div>
                         </SheetContent>
                     </Sheet>
@@ -188,11 +258,17 @@ export function ShopFilters() {
             </div>
 
             {activeFilterCount > 0 && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-in fade-in slide-in-from-top-2">
-                    <span>Active filters:</span>
-                    {search && <Badge variant="secondary" className="px-2 py-0.5 text-xs">Search: {search}</Badge>}
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground animate-in fade-in slide-in-from-top-2">
+                    <span>Active:</span>
+                    {searchParams.get("q") && <Badge variant="secondary" className="px-2 py-0.5 text-xs">Search: {searchParams.get("q")}</Badge>}
                     {region !== "all" && <Badge variant="secondary" className="px-2 py-0.5 text-xs">Region: {region}</Badge>}
                     {price !== "all" && <Badge variant="secondary" className="px-2 py-0.5 text-xs">Price: {price}</Badge>}
+                    {selectedBanks.length > 0 && (
+                        <Badge variant="secondary" className="px-2 py-0.5 text-xs">Banks: {selectedBanks.join(", ")}</Badge>
+                    )}
+                    {(minBal || maxBal) && (
+                        <Badge variant="secondary" className="px-2 py-0.5 text-xs">Balance: ${minBal || "0"} - ${maxBal || "∞"}</Badge>
+                    )}
                     <button onClick={clearFilters} className="text-xs hover:text-primary transition-colors ml-2 underline decoration-dashed">
                         Clear all
                     </button>
