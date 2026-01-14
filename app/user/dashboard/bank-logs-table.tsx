@@ -259,20 +259,37 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
   return (
     <div className="w-full">
       {/* Filters Section */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px]">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">
+      {/* Filters Section */}
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Search
           </label>
-          <Input
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
+          <div className="relative">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9"
+            />
+          </div>
         </div>
-        <div className="min-w-[150px]">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Region
           </label>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
@@ -288,8 +305,8 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
             </SelectContent>
           </Select>
         </div>
-        <div className="min-w-[150px]">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Banks
           </label>
           <Select value={selectedBank} onValueChange={setSelectedBank}>
@@ -305,8 +322,8 @@ export function BankLogsTable({ initialData = [], cartProductIds = new Set() }: 
             </SelectContent>
           </Select>
         </div>
-        <div className="min-w-[150px]">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Price Range
           </label>
           <Select
