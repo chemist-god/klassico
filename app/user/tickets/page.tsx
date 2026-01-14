@@ -27,7 +27,11 @@ export default async function TicketsPage() {
             <Card className="p-8 flex flex-col items-center w-full">
               <CardContent className="flex flex-col items-center">
                 <span className="text-lg font-semibold mb-2">Need Help?</span>
-                <span className="mb-4 text-muted-foreground">Click "Open Chat" to start a conversation with our support team.</span>
+                <span className="mb-4 text-muted-foreground">
+                  Click{" "}
+                  <span className="font-medium text-foreground">Open Chat</span>{" "}
+                  to start a conversation with our support team.
+                </span>
                 <CreateTicketButton />
               </CardContent>
             </Card>
