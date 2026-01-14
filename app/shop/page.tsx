@@ -1,28 +1,60 @@
 export const dynamic = "force-dynamic";
 
-import { Input } from "@/components/ui/input";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { getProducts } from "@/lib/actions/products";
 import { Product } from "@/lib/api/types";
 import { ProductCard } from "./product-card";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ShopFilters } from "./shop-filters";
 import * as motion from "framer-motion/client";
+import { Search } from "lucide-react";
 
-export default async function ShopPage() {
+interface ShopPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function ShopPage({ searchParams }: ShopPageProps) {
+  const params = await searchParams;
   const result = await getProducts();
-  const products: Product[] = result.success && result.data ? result.data : [];
+  const allProducts: Product[] = result.success && result.data ? result.data : [];
+
+  // ----------------------------------------------------------------------
+  // Server-Side Filtering Logic
+  // In a real enterprise app, this would happen in the DB query (Prisma).
+  // For now, we filter the array since the dataset is small.
+  // ----------------------------------------------------------------------
+
+  const query = (params.q as string)?.toLowerCase() || "";
+  const regionParam = (params.region as string) || "all";
+  const priceParam = (params.price as string) || "all";
+
+  let products = allProducts.filter((product) => {
+    // Search Filter
+    const matchesSearch = query
+      ? product.name.toLowerCase().includes(query) ||
+      product.bank.toLowerCase().includes(query) ||
+      product.region.toLowerCase().includes(query)
+      : true;
+
+    // Region Filter
+    const matchesRegion = regionParam !== "all"
+      ? product.region.toLowerCase() === regionParam.toLowerCase()
+      : true;
+
+    return matchesSearch && matchesRegion;
+  });
+
+  // Price Sort
+  if (priceParam === "asc") {
+    products.sort((a, b) => a.price - b.price);
+  } else if (priceParam === "desc") {
+    products.sort((a, b) => b.price - a.price);
+  }
+
+  // ----------------------------------------------------------------------
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-12">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section - Aligned with Dashboard layout */}
+        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,57 +76,19 @@ export default async function ShopPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="font-medium text-foreground">{products.length}</span> Products Live
+              <span className="font-medium text-foreground">{allProducts.length}</span> Products Live
             </div>
           </div>
         </motion.div>
 
-        {/* Filters Bar - Integrated and Clean */}
+        {/* Client-Side Filter Bar (Maintains State) */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="sticky top-4 z-30 bg-background/80 backdrop-blur-xl border border-border/50 shadow-sm rounded-2xl p-3"
+          className="sticky top-4 z-30"
         >
-          <div className="flex flex-col lg:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                className="pl-10 h-10 bg-muted/40 border-border/50 focus-visible:bg-background transition-colors"
-                placeholder="Search products..."
-              />
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 px-1 lg:px-0 no-scrollbar">
-              <Select>
-                <SelectTrigger className="w-[140px] h-10 bg-muted/40 border-border/50">
-                  <SelectValue placeholder="Region" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  <SelectItem value="usa">USA</SelectItem>
-                  <SelectItem value="uk">UK</SelectItem>
-                  <SelectItem value="ca">Canada</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-[140px] h-10 bg-muted/40 border-border/50">
-                  <SelectValue placeholder="Price" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="asc">Low to High</SelectItem>
-                  <SelectItem value="desc">High to Low</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button variant="outline" className="h-10 px-4 gap-2 bg-muted/40 border-border/50 hover:bg-muted/60">
-                <SlidersHorizontal className="w-4 h-4" />
-                <span className="hidden sm:inline">Advanced</span>
-              </Button>
-            </div>
-          </div>
+          <ShopFilters />
         </motion.div>
 
         {/* Products Grid */}
@@ -110,12 +104,12 @@ export default async function ShopPage() {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-1">No Products Found</h3>
               <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                Try adjusting your filters or search terms.
+                {"We couldn't find any products matching your filters."}
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product: Product, index: number) => (
+              {products.map((product: Product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
