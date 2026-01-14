@@ -36,17 +36,17 @@ export function CartTable({
       const result = await updateCartItem(itemId, newQuantity);
       if (result.success && result.data) {
         const updatedItem = result.data as CartItem;
-        
+
         // Update local state
         const updatedItems = cartItems.map((item) =>
           item.id === itemId ? updatedItem : item
         );
         onItemsChange(updatedItems);
-        
+
         // Show success toast
         const item = cartItems.find((i) => i.id === itemId);
         const itemName = item?.product.name || "Item";
-        
+
         if (newQuantity > item!.quantity) {
           toast({
             variant: "default",
@@ -114,14 +114,14 @@ export function CartTable({
         // Find the item being removed to show its name in toast
         const removedItem = cartItems.find((item: CartItem) => item.id === itemId);
         const itemName = removedItem?.product.name || "Item";
-        
+
         // Clear the item's timer
         clearCartItemTimer(itemId);
-        
+
         // Remove from local state
         const updatedItems = cartItems.filter((item: CartItem) => item.id !== itemId);
         onItemsChange(updatedItems);
-        
+
         // Show success toast
         toast({
           variant: "default",
@@ -176,28 +176,28 @@ export function CartTable({
   return (
     <div className="overflow-x-auto rounded-xl shadow bg-card">
       <table className="min-w-full divide-y divide-border">
-        <thead className="bg-muted/50">
+        <thead className="bg-muted/30 border-b border-white/5">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+            <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground tracking-wide">
               Product
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+            <th className="hidden md:table-cell px-6 py-4 text-left text-xs font-medium text-muted-foreground tracking-wide">
               Region
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+            <th className="hidden sm:table-cell px-6 py-4 text-left text-xs font-medium text-muted-foreground tracking-wide">
               Balance
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+            <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground tracking-wide">
               Price
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
-              Quantity
+            <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground tracking-wide">
+              Qty
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
-              Expires In
+            <th className="hidden sm:table-cell px-6 py-4 text-left text-xs font-medium text-muted-foreground tracking-wide">
+              Expires
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
-              Action
+            <th className="px-6 py-4 text-right text-xs font-medium text-muted-foreground tracking-wide">
+              Actions
             </th>
           </tr>
         </thead>
