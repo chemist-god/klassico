@@ -48,17 +48,17 @@ export function WalletAddressDisplay({ address }: WalletAddressDisplayProps) {
                     <h3 className="text-lg font-semibold text-foreground">Bitcoin Address</h3>
                 </div>
 
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
-                    <code className="flex-1 text-sm font-mono text-foreground break-all">
+                <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/30 border border-white/10 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                    <code className="flex-1 text-sm font-mono text-foreground break-all px-4 py-2 bg-transparent outline-none">
                         {showFull ? address : formatAddress(address)}
                     </code>
 
-                    <div className="flex items-center gap-1 ml-2">
+                    <div className="flex items-center gap-1 pr-1">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowFull(!showFull)}
-                            className="h-8 w-8"
+                            className="h-9 w-9 rounded-xl hover:bg-background/80 hover:text-primary transition-colors"
                             aria-label={showFull ? "Hide full address" : "Show full address"}
                         >
                             {showFull ? (
@@ -72,21 +72,23 @@ export function WalletAddressDisplay({ address }: WalletAddressDisplayProps) {
                             variant="ghost"
                             size="icon"
                             onClick={handleCopy}
-                            className="h-8 w-8"
+                            className="h-9 w-9 rounded-xl hover:bg-background/80 hover:text-primary transition-colors"
                             aria-label="Copy address"
                         >
                             {copied ? (
-                                <Check className="h-4 w-4 text-green-500" />
+                                <Check className="h-4 w-4 text-emerald-500" />
                             ) : (
                                 <Copy className="h-4 w-4" />
                             )}
                         </Button>
 
+                        <div className="w-px h-5 bg-border/50 mx-1" />
+
                         <Button
-                            variant="ghost"
+                            variant="default"
                             size="icon"
                             onClick={() => setShowQR(true)}
-                            className="h-8 w-8"
+                            className="h-9 w-9 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground shadow-none transition-all"
                             aria-label="Show QR code"
                         >
                             <QrCode className="h-4 w-4" />
@@ -94,8 +96,9 @@ export function WalletAddressDisplay({ address }: WalletAddressDisplayProps) {
                     </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground">
-                    Only send Bitcoin (BTC) to this address. Sending other cryptocurrencies may result in permanent loss.
+                <p className="text-xs text-center md:text-left text-muted-foreground/80 flex items-center justify-center md:justify-start gap-1.5 px-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500/50 blink-animation" />
+                    Only send Bitcoin (BTC) to this address. Other tokens will be lost.
                 </p>
             </div>
 
