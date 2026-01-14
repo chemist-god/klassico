@@ -202,13 +202,15 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent>
-        <DrawerHeader className="text-left px-4 pt-4">
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader className="text-left px-4 pt-4 flex-shrink-0">
           <DrawerTitle className="sr-only">{product.name}</DrawerTitle>
           <DrawerDescription className="sr-only">Product Details</DrawerDescription>
           <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted mb-4" />
         </DrawerHeader>
-        <ProductContent isDrawer />
+        <div className="overflow-y-auto px-1">
+          <ProductContent isDrawer />
+        </div>
       </DrawerContent>
     </Drawer>
   );
