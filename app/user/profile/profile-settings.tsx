@@ -116,32 +116,29 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
   };
 
   return (
-    <main className="min-h-screen bg-muted/40 text-foreground">
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background text-foreground py-10 px-4 md:px-8">
+      <div className="mx-auto w-full max-w-5xl space-y-8">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-semibold">Profile Settings</h1>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-1">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Profile Settings</h1>
+              <p className="text-muted-foreground text-lg font-light">
                 Keep your profile information up to date and secure.
               </p>
             </div>
-            <Badge variant="secondary" className="text-xs font-semibold uppercase tracking-wide">
-              Account
-            </Badge>
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Details</CardTitle>
+        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-8">
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+              <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+                <CardTitle className="text-lg font-semibold">Personal Details</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <form className="space-y-5" onSubmit={handleProfileSubmit}>
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                     <Input
                       id="username"
                       value={profileValues.username}
@@ -150,6 +147,7 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                       }
                       placeholder="Choose a username"
                       autoComplete="username"
+                      className="h-11 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground">
                       This is visible to other users and on your activity.
@@ -157,7 +155,7 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email address</Label>
+                    <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
                     <Input
                       id="email"
                       type="email"
@@ -167,14 +165,15 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                       }
                       placeholder="you@example.com"
                       autoComplete="email"
+                      className="h-11 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground">
                       We will send receipts and alerts to this email.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button type="submit" disabled={!isProfileDirty || isSavingProfile}>
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Button type="submit" disabled={!isProfileDirty || isSavingProfile} className="h-10 rounded-full px-6 shadow-sm">
                       {isSavingProfile ? "Saving..." : "Save changes"}
                     </Button>
                     {!isProfileDirty && (
@@ -187,11 +186,11 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Security</CardTitle>
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+              <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+                <CardTitle className="text-lg font-semibold">Security</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <form className="space-y-5" onSubmit={handlePasswordSubmit}>
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Current password</Label>
@@ -206,6 +205,7 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                         }))
                       }
                       autoComplete="current-password"
+                      className="h-11 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
                     />
                   </div>
 
@@ -223,6 +223,7 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                           }))
                         }
                         autoComplete="new-password"
+                        className="h-11 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
@@ -238,12 +239,13 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                           }))
                         }
                         autoComplete="new-password"
+                        className="h-11 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 transition-all rounded-xl"
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button type="submit" disabled={isSavingPassword}>
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Button type="submit" disabled={isSavingPassword} className="h-10 rounded-full px-6 shadow-sm">
                       {isSavingPassword ? "Updating..." : "Update password"}
                     </Button>
                     <span className="text-xs text-muted-foreground">
@@ -256,32 +258,35 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
           </div>
 
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Summary</CardTitle>
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
+              <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+                <CardTitle className="text-lg font-semibold">Account Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
+              <CardContent className="space-y-4 text-sm p-6">
                 <div className="space-y-1">
-                  <p className="text-muted-foreground">Signed in as</p>
-                  <p className="font-medium">{savedUser?.username || "Unknown user"}</p>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Signed in as</p>
+                  <p className="font-medium text-base truncate">{savedUser?.username || "Unknown user"}</p>
                 </div>
-                <Separator />
+                <Separator className="bg-border/50" />
                 <div className="space-y-1">
-                  <p className="text-muted-foreground">Contact email</p>
-                  <p className="font-medium">{savedUser?.email || "Not available"}</p>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Contact email</p>
+                  <p className="font-medium text-base truncate">{savedUser?.email || "Not available"}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Need help?</CardTitle>
+            <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-sm shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+                  Need help?
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  If you notice unexpected changes or need assistance, reach out to support.
+              <CardContent className="space-y-4 text-sm">
+                <p className="text-muted-foreground">
+                  If you notice unexpected changes or need assistance, reach out to our support team.
                 </p>
-                <Button variant="outline" type="button">
+                <Button variant="outline" type="button" className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors">
                   Contact support
                 </Button>
               </CardContent>
