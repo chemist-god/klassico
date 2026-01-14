@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Nunito_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { TopNav } from "@/components/nav/top-nav";
 
-const nunitoSans = Nunito_Sans({ variable: '--font-sans' });
+const outfit = Outfit({ variable: '--font-sans', subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Kubera",
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={nunitoSans.variable}>
+    <html lang="en" suppressHydrationWarning className={outfit.variable}>
       <body className="antialiased">
         <ThemeProvider
           attribute="class"
