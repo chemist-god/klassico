@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Copy, Check, Eye, EyeOff, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { QRCodeModal } from "./qr-code-modal";
 
 interface WalletAddressDisplayProps {
@@ -14,7 +14,6 @@ export function WalletAddressDisplay({ address }: WalletAddressDisplayProps) {
     const [copied, setCopied] = useState(false);
     const [showFull, setShowFull] = useState(false);
     const [showQR, setShowQR] = useState(false);
-    const { toast } = useToast();
 
     // Format address: show first 10 + last 10 characters
     const formatAddress = (addr: string) => {
@@ -26,17 +25,13 @@ export function WalletAddressDisplay({ address }: WalletAddressDisplayProps) {
         try {
             await navigator.clipboard.writeText(address);
             setCopied(true);
-            toast({
-                title: "Address copied!",
+            toast.success("Address copied!", {
                 description: "Bitcoin address has been copied to clipboard",
-                variant: "success",
             });
             setTimeout(() => setCopied(false), 2000);
         } catch (error) {
-            toast({
-                title: "Failed to copy",
+            toast.error("Failed to copy", {
                 description: "Please try again or copy manually",
-                variant: "destructive",
             });
         }
     };
