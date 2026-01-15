@@ -3,7 +3,7 @@
 import { ActionButton } from "@/components/common/action-button";
 import { ShoppingCart, Check } from "lucide-react";
 import { addToCart } from "@/lib/actions/cart";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { setCartItemTimer } from "@/lib/utils/cart-timers";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: AddToCartButtonProps) {
-  const { toast } = useToast();
   const router = useRouter();
 
   const handleAddToCart = async () => {
@@ -39,9 +38,7 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
 
       if (isUpdate) {
         // Item already in cart, quantity updated - don't redirect
-        toast({
-          variant: "default",
-          title: "Quantity Updated ✨",
+        toast("Quantity Updated ✨", {
           description: `${productName} is already in your cart. Quantity increased to ${cartItem.quantity}.`,
           duration: 3000,
         });
@@ -55,9 +52,7 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
           onAddedToCart();
         }
 
-        toast({
-          variant: "success",
-          title: "Product Added to Cart! 🎉",
+        toast.success("Product Added to Cart! 🎉", {
           description: "Redirecting to cart...",
           duration: 2000,
         });
@@ -72,9 +67,7 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
       const errorMessage = result.error || "Failed to add item to cart";
 
       if (errorMessage.includes("sold") || errorMessage.includes("already been sold")) {
-        toast({
-          variant: "destructive",
-          title: "Not Available ❌",
+        toast.error("Not Available ❌", {
           description: "This product has already been sold and is no longer available.",
           duration: 4000,
         });
@@ -83,23 +76,17 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
         errorMessage.includes("Pending") ||
         errorMessage.includes("currently being processed")
       ) {
-        toast({
-          variant: "destructive",
-          title: "Currently Unavailable ⏳",
+        toast.error("Currently Unavailable ⏳", {
           description: "This product is being processed and cannot be added to cart right now.",
           duration: 4000,
         });
       } else if (errorMessage.includes("not found")) {
-        toast({
-          variant: "destructive",
-          title: "Product Not Found",
+        toast.error("Product Not Found", {
           description: "The product you're trying to add is no longer available.",
           duration: 4000,
         });
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
+        toast.error("Error", {
           description: errorMessage,
           duration: 4000,
         });
