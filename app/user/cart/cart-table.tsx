@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CartItem } from "@/lib/api/types";
 import { removeFromCart, updateCartItem } from "@/lib/actions/cart";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { toast, toastError } from "@/lib/utils/toast";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { CountdownTimer } from "./countdown-timer";
 import { clearCartItemTimer } from "@/lib/utils/cart-timers";
@@ -58,14 +58,14 @@ export function CartTable({
           });
         }
       } else {
-        toast.error("Error", {
+        toastError("Error", {
           description: result.error || "Failed to update quantity.",
           duration: 4000,
         });
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Error", {
+      toastError("Error", {
         description: "An unexpected error occurred.",
         duration: 4000,
       });
@@ -119,14 +119,14 @@ export function CartTable({
           duration: 3000,
         });
       } else {
-        toast.error("Error", {
+        toastError("Error", {
           description: result.error || "Failed to remove item from cart.",
           duration: 4000,
         });
       }
     } catch (error) {
       console.error("Error removing item:", error);
-      toast.error("Error", {
+      toastError("Error", {
         description: "An unexpected error occurred while removing the item.",
         duration: 4000,
       });
