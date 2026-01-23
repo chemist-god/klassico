@@ -7,7 +7,7 @@ import { CartTable } from "./cart-table";
 import { CartItem } from "@/lib/api/types";
 import { createOrder } from "@/lib/actions/orders";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast, toastError } from "@/lib/utils/toast";
 import { removeFromCart } from "@/lib/actions/cart";
 import {
   clearCartItemTimer,
@@ -59,7 +59,7 @@ export function CartPageClient({
 
     const itemName = expiredItem.product.name || "Item";
 
-    toast.error("Item Expired ⏰", {
+    toastError("Item Expired ⏰", {
       description: `${itemName} has expired and has been removed from your cart.`,
       duration: 5000,
     });
@@ -75,7 +75,7 @@ export function CartPageClient({
       setCartItems((prev) => prev.filter((item) => item.id !== itemId));
     } catch (error) {
       console.error("Error removing expired item:", error);
-      toast.error("Error", {
+      toastError("Error", {
         description: "Failed to remove expired item.",
         duration: 4000,
       });
@@ -107,11 +107,14 @@ export function CartPageClient({
           duration: 3000,
         });
 
-        // Redirect to orders page
-        setTimeout(() => {
+        // Redirect to new order receipt
+        // Redirect to new order receipt immediately
+        if (result.data) {
+          router.push(`/user/orders/${result.data.id}?new=true`);
+        } else {
           router.push("/user/orders");
-          router.refresh();
-        }, 1000);
+        }
+        router.refresh();
       } else {
         toast.error("Error", {
           description: result.error || "Failed to create order.",
