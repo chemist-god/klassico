@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CartItem } from "@/lib/api/types";
 import { removeFromCart, updateCartItem } from "@/lib/actions/cart";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast, toastError } from "@/lib/utils/toast";
 import { Trash2, Plus, Minus } from "lucide-react";
 import Image from "next/image";
 import { getBankLogo } from "@/lib/utils/bank-logos";
@@ -49,14 +49,14 @@ export function CartItemsList({ cartItems }: { cartItems: CartItem[] }) {
           });
         }
       } else {
-        toast.error("Error", {
+        toastError("Error", {
           description: result.error || "Failed to update quantity.",
           duration: 4000,
         });
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Error", {
+      toastError("Error", {
         description: "An unexpected error occurred.",
         duration: 4000,
       });
@@ -107,14 +107,14 @@ export function CartItemsList({ cartItems }: { cartItems: CartItem[] }) {
         });
       } else {
         // Show error toast
-        toast.error("Error", {
+        toastError("Error", {
           description: result.error || "Failed to remove item from cart.",
           duration: 4000,
         });
       }
     } catch (error) {
       console.error("Error removing item:", error);
-      toast.error("Error", {
+      toastError("Error", {
         description: "An unexpected error occurred while removing the item.",
         duration: 4000,
       });
