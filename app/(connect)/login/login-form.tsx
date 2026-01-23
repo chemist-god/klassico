@@ -3,10 +3,11 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { login } from "@/lib/actions/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/utils/constants";
 import { CaptchaInput } from "@/components/captcha/captcha-input";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const router = useRouter();
@@ -18,6 +19,23 @@ export function LoginForm() {
     password: "",
     captchaAnswer: "",
   });
+
+  useEffect(() => {
+    const isRegistered = searchParams.get("registered") === "true";
+    if (!isRegistered) return;
+
+    toast.success("Account created!", {
+      description: "Your account is ready. Sign in to continue.",
+      duration: 3500,
+    });
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("registered");
+    const nextUrl = params.toString()
+      ? `${ROUTES.LOGIN}?${params.toString()}`
+      : ROUTES.LOGIN;
+    router.replace(nextUrl);
+  }, [router, searchParams]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
