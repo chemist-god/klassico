@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { toast, toastError } from "@/lib/utils/toast";
 
 type ProfileUser = {
   id?: string;
@@ -68,7 +68,7 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
         description: "Your account details have been saved.",
       });
     } catch (error) {
-      toast.error("Update failed", {
+      toastError("Update failed", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
@@ -100,7 +100,7 @@ export function ProfileSettings({ initialUser }: ProfileSettingsProps) {
         description: "Your password has been changed successfully.",
       });
     } catch (error) {
-      toast.error("Password update failed", {
+      toastError("Password update failed", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
