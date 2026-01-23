@@ -3,7 +3,7 @@
 import { ActionButton } from "@/components/common/action-button";
 import { ShoppingCart, Check } from "lucide-react";
 import { addToCart } from "@/lib/actions/cart";
-import { toast } from "sonner";
+import { toast, toastError } from "@/lib/utils/toast";
 import { useRouter } from "next/navigation";
 import { setCartItemTimer } from "@/lib/utils/cart-timers";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,7 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
       const errorMessage = result.error || "Failed to add item to cart";
 
       if (errorMessage.includes("sold") || errorMessage.includes("already been sold")) {
-        toast.error("Not Available ❌", {
+        toastError("Not Available ❌", {
           description: "This product has already been sold and is no longer available.",
           duration: 4000,
         });
@@ -76,17 +76,17 @@ export function AddToCartButton({ productId, isInCart = false, onAddedToCart }: 
         errorMessage.includes("Pending") ||
         errorMessage.includes("currently being processed")
       ) {
-        toast.error("Currently Unavailable ⏳", {
+        toastError("Currently Unavailable ⏳", {
           description: "This product is being processed and cannot be added to cart right now.",
           duration: 4000,
         });
       } else if (errorMessage.includes("not found")) {
-        toast.error("Product Not Found", {
+        toastError("Product Not Found", {
           description: "The product you're trying to add is no longer available.",
           duration: 4000,
         });
       } else {
-        toast.error("Error", {
+        toastError("Error", {
           description: errorMessage,
           duration: 4000,
         });
