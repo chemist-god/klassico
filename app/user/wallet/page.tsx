@@ -5,6 +5,8 @@ import { GenerateWalletButton } from "./generate-wallet-button";
 import { WalletAddressDisplay } from "./wallet-address-display";
 import { HowToTopUp } from "./how-to-top-up";
 
+export const dynamic = "force-dynamic";
+
 export default async function WalletPage() {
   const result = await getWallet();
   const wallet = result.success && result.data ? result.data : null;
