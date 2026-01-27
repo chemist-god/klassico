@@ -207,7 +207,11 @@ function QRCodeContent({
                     </Button>
                 </div>
             )}
+
+
         </div>
     );
 }
+
+
 
