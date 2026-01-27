@@ -95,3 +95,5 @@ export async function generateWalletAddress() {
     }
   }, "Failed to generate wallet address");
 }
+
+
