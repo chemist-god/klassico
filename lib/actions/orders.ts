@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { withErrorHandling } from "@/lib/utils/result";
+import { revalidatePath } from "next/cache";
 
 type CartItemWithProduct = {
   productId: string;
@@ -127,6 +128,20 @@ export async function createOrder(cartItemIds: string[]) {
       },
     });
 
+    // Create Notification
+    try {
+      const { createNotification } = await import("@/lib/actions/notifications");
+      await createNotification(
+        userId,
+        "Order Placed Successfully",
+        `Order #${order.id.slice(0, 8)} has been placed and is being processed.`,
+        "success"
+      );
+    } catch (e) {
+      console.error("Failed to create order notification", e);
+    }
+
+    revalidatePath("/user/cart");
     return order;
   }, "Failed to create order");
 }
