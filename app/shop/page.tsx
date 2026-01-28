@@ -6,6 +6,7 @@ import { ProductCard } from "./product-card";
 import { ShopFilters } from "./shop-filters";
 import * as motion from "framer-motion/client";
 import { Search } from "lucide-react";
+import { Suspense } from "react";
 
 interface ShopPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -102,7 +103,18 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="sticky top-4 z-30"
         >
-          <ShopFilters />
+          <Suspense fallback={
+            <div className="bg-background/80 backdrop-blur-xl border border-border/50 shadow-sm rounded-2xl p-3 flex flex-col md:flex-row gap-3 animate-pulse">
+              <div className="h-10 bg-muted/30 rounded-xl flex-1" />
+              <div className="flex gap-2">
+                <div className="h-10 w-[140px] bg-muted/30 rounded-xl" />
+                <div className="h-10 w-[140px] bg-muted/30 rounded-xl" />
+                <div className="h-10 w-[120px] bg-muted/30 rounded-xl" />
+              </div>
+            </div>
+          }>
+            <ShopFilters />
+          </Suspense>
         </motion.div>
 
         {/* Products Grid */}
