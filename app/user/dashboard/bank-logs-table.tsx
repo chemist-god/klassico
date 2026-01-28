@@ -16,9 +16,10 @@ import { AddToCartButton } from "@/app/shop/add-to-cart-button";
 import { BankLog } from "@/lib/api/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getBankLogo } from "@/lib/utils/bank-logos";
+import { genVariable } from "@/lib/config/genVariable";
 
-const ITEMS_PER_PAGE = 6;
-const POLLING_INTERVAL = 4000; // 4 seconds (less than 5s as requested)
+const ITEMS_PER_PAGE = genVariable.limits.itemsPerPage;
+const POLLING_INTERVAL = genVariable.intervals.bankLogsPolling;
 
 interface BankLogsTableProps {
   initialData?: BankLog[];
