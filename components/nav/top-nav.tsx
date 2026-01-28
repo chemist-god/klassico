@@ -4,6 +4,7 @@ import { ROUTES } from "@/lib/utils/constants";
 import { UserNav } from "@/components/nav/user-nav";
 import { ModeToggle } from "@/components/nav/mode-toggle";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { genVariable } from "@/lib/config/genVariable";
 import {
   Sheet,
   SheetContent,
@@ -100,7 +101,7 @@ export async function TopNav() {
             className="flex items-center gap-2 text-xl font-bold tracking-tight text-primary hover:opacity-90 transition-opacity"
           >
             {/* Optional: Add a logo icon here if available */}
-            Kubera
+            {genVariable.app.displayName}
           </Link>
 
           {session ? (
