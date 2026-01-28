@@ -5,8 +5,10 @@
  * Each cart item gets its own 10-minute timer that persists across page refreshes.
  */
 
-const TIMER_DURATION_MINUTES = 10;
-const TIMER_STORAGE_PREFIX = "cart_timer_";
+import { genVariable } from "@/lib/config/genVariable";
+
+const TIMER_DURATION_MINUTES = genVariable.timeouts.cartTimerMinutes;
+const TIMER_STORAGE_PREFIX = genVariable.storage.cartTimerPrefix;
 
 /**
  * Get the timer start time for a specific cart item
