@@ -1,22 +1,24 @@
+import { genVariable } from "./genVariable";
+
 export const businessConfig = {
-  name: "Kubera",
-  email: "support@kubera.com",
-  website: "https://kubera-master.vercel.app/",
-  phone: "1-800-KUBERA-0",
-  address: "123 Business Street",
-  city: "New York",
-  state: "NY",
-  zipCode: "10001",
-  country: "United States",
+  name: genVariable.app.name,
+  email: genVariable.contact.email,
+  website: genVariable.contact.website,
+  phone: genVariable.contact.phone,
+  address: genVariable.address.street,
+  city: genVariable.address.city,
+  state: genVariable.address.state,
+  zipCode: genVariable.address.zipCode,
+  country: genVariable.address.country,
   
   // Logos
-  logoUrl: "/logo.png",
-  logoPrintUrl: "/logo-print.png",
+  logoUrl: genVariable.assets.logoUrl,
+  logoPrintUrl: genVariable.assets.logoPrintUrl,
   
   // Tax settings
-  defaultTaxRate: 0.00, // 0% - adjust as needed for your jurisdiction
+  defaultTaxRate: genVariable.financial.defaultTaxRate,
   
   // Receipt settings
-  receiptPrefix: "RCP",
-  invoicePrefix: "INV",
+  receiptPrefix: genVariable.financial.receiptPrefix,
+  invoicePrefix: genVariable.financial.invoicePrefix,
 };
