@@ -1,5 +1,6 @@
 import { LoginForm } from "./login-form";
 import { Suspense } from "react";
+import { genVariable } from "@/lib/config/genVariable";
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export default async function LoginPage() {
             Welcome Back
           </span>
           <p className="text-sm text-muted-foreground mt-2 text-center">
-            Sign in to your Kubera account
+            Sign in to your {genVariable.app.displayName} account
           </p>
         </div>
 
