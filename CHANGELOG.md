@@ -19,3 +19,12 @@ Semantic Versioning.
 - custom 404 page
 - checkout process
 
+## [0.9.1] - 2026-01-31
+### Added
+- Beta release of the application.
+
+### Changed
+- Change Variable Name
+
+### Fixed
+- Change from Kubera to Klassico
