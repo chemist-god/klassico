@@ -8,8 +8,8 @@
 export const genVariable = {
   // Version Information
   version: {
-    app: "0.9.0", // Semantic versioning (MAJOR.MINOR.PATCH)
-    lastUpdated: "2026-01-28", // Date of last major update
+    app: "0.9.1", // Semantic versioning (MAJOR.MINOR.PATCH)
+    lastUpdated: "2026-01-31", // Date of last major update
   },
 
   // Application Identity
@@ -24,7 +24,7 @@ export const genVariable = {
   contact: {
     email: "support@klassico.com",
     phone: "1-800-KLASSICO-0",
-    website: "https://kubera-master.vercel.app/",
+    website: "https://klassico.vercel.app/",
     supportUrl: "/user/tickets",
     hours: "Available 24/7",
   },
