@@ -28,3 +28,6 @@ Semantic Versioning.
 
 ### Fixed
 - Change from Kubera to Klassico
+- update from 
+              https://github.com/chemist-god/kubera-master.git to
+              https://github.com/chemist-god/klassico
