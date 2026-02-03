@@ -83,48 +83,52 @@ export function CartPageClient({
   };
 
   const handleProceedToCheckout = async () => {
-    if (hasInsufficientBalance) {
-      toast.error("Insufficient Balance", {
-        description: "Please top up your account to proceed with checkout.",
-        duration: 4000,
-      });
-      return;
-    }
-
     setIsProcessing(true);
     try {
       const cartItemIds = cartItems.map((item) => item.id);
-      const result = await createOrder(cartItemIds);
+      
+      // Step 1: Create order
+      const orderResult = await createOrder(cartItemIds);
 
-      if (result.success) {
-        // Clear all cart item timers on successful checkout
-        cartItems.forEach((item) => {
-          clearCartItemTimer(item.id);
-        });
-
-        toast.success("Order Created! 🎉", {
-          description: "Your order has been successfully created.",
-          duration: 3000,
-        });
-
-        // Redirect to new order receipt
-        // Redirect to new order receipt immediately
-        if (result.data) {
-          router.push(`/user/orders/${result.data.id}?new=true`);
-        } else {
-          router.push("/user/orders");
-        }
-        router.refresh();
-      } else {
+      if (!orderResult.success || !orderResult.data) {
         toast.error("Error", {
-          description: result.error || "Failed to create order.",
+          description: orderResult.error || "Failed to create order.",
           duration: 4000,
         });
+        return;
       }
+
+      const order = orderResult.data;
+
+      // Step 2: Create payment
+      const { createOrderPayment } = await import("@/lib/actions/orders");
+      const paymentResult = await createOrderPayment(order.id);
+
+      if (!paymentResult.success) {
+        toast.error("Error", {
+          description: paymentResult.error || "Failed to initialize payment.",
+          duration: 4000,
+        });
+        return;
+      }
+
+      // Clear all cart item timers on successful checkout
+      cartItems.forEach((item) => {
+        clearCartItemTimer(item.id);
+      });
+
+      toast.success("Order Created! 🎉", {
+        description: "Redirecting to payment...",
+        duration: 2000,
+      });
+
+      // Redirect to payment page
+      router.push(`/user/orders/${order.id}/pay`);
+      router.refresh();
     } catch (error) {
-      console.error("Error creating order:", error);
+      console.error("Error during checkout:", error);
       toast.error("Error", {
-        description: "An unexpected error occurred while creating the order.",
+        description: "An unexpected error occurred during checkout.",
         duration: 4000,
       });
     } finally {
@@ -174,7 +178,7 @@ export function CartPageClient({
           <div className="space-y-3">
             <Button
               onClick={handleProceedToCheckout}
-              disabled={isProcessing || hasInsufficientBalance || cartItems.length === 0}
+              disabled={isProcessing || cartItems.length === 0}
               className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2 text-lg font-semibold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               {isProcessing ? (
@@ -182,18 +186,18 @@ export function CartPageClient({
               ) : (
                 <>
                   <FileText className="w-5 h-5" />
-                  Checkout
+                  Checkout with Crypto
                 </>
               )}
             </Button>
 
-            {/* Insufficient Balance Error */}
-            {hasInsufficientBalance && (
-              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3 text-destructive text-sm">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <span className="font-medium leading-tight">Insufficient balance. Please top up your wallet to ensure a smooth checkout.</span>
-              </div>
-            )}
+            {/* Payment Info */}
+            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-start gap-3 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-primary" />
+              <span className="font-medium leading-tight text-muted-foreground">
+                You will be redirected to complete payment with cryptocurrency
+              </span>
+            </div>
           </div>
         </div>
       </div>
