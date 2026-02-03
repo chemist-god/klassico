@@ -75,6 +75,13 @@ model Order {
   status        String   @default("Pending") // Pending, Processing, Completed, Cancelled
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  
+  // OxaPay payment fields
+  paymentProvider  String?   // "oxapay" | "wallet" | null
+  paymentAddress   String?   // Crypto address for this order
+  paymentTrackId   String?   // OxaPay track_id
+  paymentUrl       String?   // OxaPay payment page URL
+  paymentExpiresAt DateTime? // Payment expiration time
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   items       OrderItem[]
@@ -83,6 +90,7 @@ model Order {
   @@index([userId])
   @@index([receiptNumber])
   @@index([transactionId])
+  @@index([paymentTrackId])
 }
 
 model OrderItem {
