@@ -32,6 +32,20 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
   const order = result.data;
   const isNew = isNewStr === "true";
 
+  // If order is pending and has payment info, redirect to payment page
+  if (order.status === "Pending" && order.paymentTrackId) {
+    // Check if payment is not expired
+    const isExpired = order.paymentExpiresAt
+      ? new Date(order.paymentExpiresAt) < new Date()
+      : false;
+
+    if (!isExpired) {
+      // Redirect to payment page using Next.js redirect
+      const { redirect } = await import('next/navigation');
+      redirect(`/user/orders/${id}/pay`);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-background text-foreground py-10 px-4 md:px-8 print:p-0 print:bg-white">
       <OrderReceipt order={order} isNew={isNew} />
