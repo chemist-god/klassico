@@ -22,3 +22,6 @@ export const businessConfig = {
   receiptPrefix: genVariable.financial.receiptPrefix,
   invoicePrefix: genVariable.financial.invoicePrefix,
 };
+
+// Order protection limits - exported separately for easy access
+export const orderLimits = genVariable.orderLimits;
