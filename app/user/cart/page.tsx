@@ -3,14 +3,20 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, FileText, AlertCircle } from "lucide-react";
 import { getCart } from "@/lib/actions/cart";
 import { getDashboardStats } from "@/lib/actions/dashboard";
+import { getUserPendingOrderCount } from "@/lib/actions/orders";
 import { CartTable } from "./cart-table";
 import { CartPageClient } from "./cart-page-client";
 
 export default async function CartPage() {
-  const [cartResult, statsResult] = await Promise.all([
+  const [cartResult, statsResult, pendingOrderResult] = await Promise.all([
     getCart(),
     getDashboardStats(),
+    getUserPendingOrderCount(),
   ]);
+
+  const pendingOrderCount = pendingOrderResult.success && pendingOrderResult.data !== undefined 
+    ? pendingOrderResult.data 
+    : 0;
 
   const cartItems = cartResult.success && cartResult.data ? cartResult.data : [];
   const stats = statsResult.success && statsResult.data ? statsResult.data : {
@@ -78,6 +84,7 @@ export default async function CartPage() {
             availableFunds={stats.availableFunds}
             total={total}
             hasInsufficientBalance={hasInsufficientBalance}
+            pendingOrderCount={pendingOrderCount}
           />
         )}
       </div>
