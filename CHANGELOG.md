@@ -7,6 +7,16 @@ Semantic Versioning.
 
 ## [Unreleased]
 ### Added
+- Pending updates for the next release.
+
+### Changed
+- No changes recorded yet.
+
+### Fixed
+- No fixes recorded yet.
+
+## [1.0.0] - 2026-02-04
+### Added
 - OxaPay crypto payment integration with invoice creation and status polling.
 - Webhook handler for payment updates with HMAC verification.
 - Dedicated payment page with QR code, countdown timer, and auto-redirect.
