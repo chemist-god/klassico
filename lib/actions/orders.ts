@@ -4,12 +4,17 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { withErrorHandling } from "@/lib/utils/result";
 import { revalidatePath } from "next/cache";
-import { businessConfig } from "@/lib/config/business";
+import { businessConfig, orderLimits } from "@/lib/config/business";
 import {
   generateReceiptNumber,
   generateTransactionId,
   calculateOrderTotals,
 } from "@/lib/utils/receipt-helpers";
+import {
+  checkRateLimit,
+  incrementRateLimit,
+  formatRateLimitMessage,
+} from "@/lib/utils/rate-limiter";
 
 type CartItemWithProduct = {
   productId: string;
@@ -74,18 +79,69 @@ export async function getOrder(orderId: string) {
 }
 
 /**
+ * Get count of user's pending orders (internal use)
+ * Used for validation before creating new orders
+ * 
+ * @param userId - User ID to check
+ * @returns Count of pending orders
+ */
+async function getPendingOrderCountInternal(userId: string): Promise<number> {
+  return prisma.order.count({
+    where: {
+      userId,
+      status: "Pending",
+    },
+  });
+}
+
+/**
+ * Get user's pending order count with auth
+ * This is the public-facing function that handles authentication
+ * 
+ * @returns Count of pending orders for authenticated user
+ */
+export async function getUserPendingOrderCount() {
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
+    const count = await getPendingOrderCountInternal(userId);
+    return count;
+  }, "Failed to get pending order count");
+}
+
+/**
  * Create order from cart items
  * 
  * This function now handles product status management:
- * 1. Creates order with items
- * 2. Updates product status to "Pending"
- * 3. Removes cart items
+ * 1. Validates rate limits and pending order counts
+ * 2. Creates order with items
+ * 3. Updates product status to "Pending"
+ * 4. Removes cart items
  * 
  * @param cartItemIds - Array of cart item IDs to create order from
  */
 export async function createOrder(cartItemIds: string[]) {
   return withErrorHandling(async () => {
     const userId = await requireAuth();
+
+    // ========================================
+    // ANTI-SPAM PROTECTION: Rate Limit Check
+    // ========================================
+    const rateLimitResult = checkRateLimit(userId, "create_order");
+    if (!rateLimitResult.allowed) {
+      throw new Error(formatRateLimitMessage(rateLimitResult.waitMinutes));
+    }
+
+    // ========================================
+    // ANTI-SPAM PROTECTION: Pending Orders Check
+    // ========================================
+    const pendingOrderCount = await getPendingOrderCountInternal(userId);
+    
+    // Hard block if too many pending orders
+    if (pendingOrderCount >= orderLimits.maxPendingOrders) {
+      throw new Error(
+        `You have ${pendingOrderCount} unpaid orders. Please complete or cancel them before creating new orders.`
+      );
+    }
 
     // Step 1: Get cart items
     const cartItems = await prisma.cartItem.findMany({
@@ -168,6 +224,11 @@ export async function createOrder(cartItemIds: string[]) {
         userId,
       },
     });
+
+    // ========================================
+    // ANTI-SPAM PROTECTION: Increment Rate Limit
+    // ========================================
+    incrementRateLimit(userId, "create_order");
 
     // Create Notification
     try {
@@ -341,4 +402,107 @@ export async function createOrderPayment(orderId: string) {
       },
     };
   }, "Failed to create order payment");
+}
+
+/**
+ * Cancel a pending order
+ * 
+ * This function:
+ * 1. Verifies user owns the order
+ * 2. Checks order status is "Pending"
+ * 3. Updates order status to "Cancelled"
+ * 4. Updates transaction status to "failed"
+ * 5. Releases products back to "Available"
+ * 6. Creates notification
+ * 
+ * @param orderId - The order ID to cancel
+ */
+export async function cancelOrder(orderId: string) {
+  return withErrorHandling(async () => {
+    const userId = await requireAuth();
+
+    // Get order with items and transaction
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: {
+          select: { productId: true },
+        },
+        transaction: true,
+      },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    // Verify order belongs to user
+    if (order.userId !== userId) {
+      throw new Error("Unauthorized access to order");
+    }
+
+    // Only allow cancellation of pending orders
+    if (order.status !== "Pending") {
+      throw new Error(
+        `Cannot cancel order with status "${order.status}". Only pending orders can be cancelled.`
+      );
+    }
+
+    // Use transaction for atomic updates
+    await prisma.$transaction(async (tx) => {
+      // Update order status to Cancelled
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: "Cancelled" },
+      });
+
+      // Update transaction status to failed
+      if (order.transaction) {
+        await tx.transaction.update({
+          where: { id: order.transaction.id },
+          data: {
+            status: "failed",
+            metadata: JSON.stringify({
+              status: "cancelled",
+              reason: "User cancelled order",
+              cancelledAt: new Date().toISOString(),
+            }),
+          },
+        });
+      }
+
+      // Release products back to Available status
+      const productIds = order.items.map((item) => item.productId);
+      if (productIds.length > 0) {
+        await tx.product.updateMany({
+          where: {
+            id: { in: productIds },
+            status: "Pending", // Only update if still pending
+          },
+          data: {
+            status: "Available",
+          },
+        });
+      }
+    });
+
+    // Create notification
+    try {
+      const { createNotification } = await import("@/lib/actions/notifications");
+      await createNotification(
+        userId,
+        "Order Cancelled",
+        `Order #${order.receiptNumber || order.id.slice(0, 8)} has been cancelled. Products have been released.`,
+        "info"
+      );
+    } catch (e) {
+      console.error("Failed to create cancellation notification", e);
+    }
+
+    revalidatePath("/user/orders");
+    revalidatePath(`/user/orders/${orderId}`);
+    revalidatePath(`/user/orders/${orderId}/pay`);
+
+    return { success: true, orderId };
+  }, "Failed to cancel order");
 }
