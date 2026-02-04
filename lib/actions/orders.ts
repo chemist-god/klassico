@@ -135,7 +135,7 @@ export async function createOrder(cartItemIds: string[]) {
     // ANTI-SPAM PROTECTION: Pending Orders Check
     // ========================================
     const pendingOrderCount = await getPendingOrderCountInternal(userId);
-    
+
     // Hard block if too many pending orders
     if (pendingOrderCount >= orderLimits.maxPendingOrders) {
       throw new Error(
@@ -361,6 +361,11 @@ export async function createOrderPayment(orderId: string) {
 
     // Import OxaPay service
     const { createInvoice } = await import("@/lib/services/oxapay");
+    const { genVariable } = await import("@/lib/config/genVariable");
+
+    // Construct full logo URL if available
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://klassico.vercel.app";
+    const logoUrl = `${siteUrl}${genVariable.assets.logoUrl}`; // Will be /logo.png
 
     // Create OxaPay invoice
     const invoice = await createInvoice({
@@ -369,7 +374,9 @@ export async function createOrderPayment(orderId: string) {
       orderId: order.id,
       email: order.user.email,
       description: `Order #${order.receiptNumber || order.id.slice(0, 8)}`,
-      returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "https://klassico.vercel.app"}/user/orders/${order.id}?new=true`,
+      returnUrl: `${siteUrl}/user/orders/${order.id}?new=true`,
+      name: genVariable.app.displayName, // "Klassico"
+      logoUrl: logoUrl, // Full URL to logo (will show when file exists)
     });
 
     // Calculate expiration time
