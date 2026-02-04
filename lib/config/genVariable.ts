@@ -8,8 +8,8 @@
 export const genVariable = {
   // Version Information
   version: {
-    app: "0.9.1", // Semantic versioning (MAJOR.MINOR.PATCH)
-    lastUpdated: "2026-01-31", // Date of last major update
+    app: "1.0.0", // Semantic versioning (MAJOR.MINOR.PATCH)
+    lastUpdated: "2026-02-04", // Date of last major update
   },
 
   // Application Identity
