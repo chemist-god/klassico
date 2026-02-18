@@ -15,6 +15,19 @@ Semantic Versioning.
 ### Fixed
 - No fixes recorded yet.
 
+## [1.1.0] - 2026-02-04
+### Added
+- N/A
+
+### Changed
+- Rebranded application to Bogatstvo (app name and display name).
+- Updated cookie prefix and cookie names to Bogatstvo branding.
+- Updated support email and phone number for Bogatstvo.
+- Updated thank-you policy text to Bogatstvo.
+
+### Fixed
+- N/A
+
 ## [1.0.0] - 2026-02-04
 ### Added
 - OxaPay crypto payment integration with invoice creation and status polling.

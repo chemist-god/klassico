@@ -8,22 +8,22 @@
 export const genVariable = {
   // Version Information
   version: {
-    app: "1.0.0", // Semantic versioning (MAJOR.MINOR.PATCH)
-    lastUpdated: "2026-02-04", // Date of last major update
+    app: "1.1.0", // Semantic versioning (MAJOR.MINOR.PATCH)
+    lastUpdated: "2026-02-18", // Date of last major update
   },
 
   // Application Identity
   app: {
-    name: "Klassico",
-    displayName: "Klassico",
+    name: "Bogatstvo",
+    displayName: "Bogatstvo",
     description: "Your trusted platform for secure digital banking solutions",
-    cookiePrefix: "Klassico_",
+    cookiePrefix: "bogatstvo_",
   },
 
   // Contact Information
   contact: {
-    email: "support@klassico.com",
-    phone: "1-800-KLASSICO-0",
+    email: "support@bogatstvo.com",
+    phone: "1-800-BOGATSTVO-0",
     website: "https://klassico.vercel.app/",
     supportUrl: "/user/tickets",
     hours: "Available 24/7",
@@ -73,8 +73,8 @@ export const genVariable = {
 
   // Cookie Names
   cookies: {
-    session: "klassico_session",
-    captcha: "klassico_captcha",
+    session: "bogatstvo_session",
+    captcha: "bogatstvo_captcha",
   },
 
   // Storage Keys
@@ -111,7 +111,7 @@ export const genVariable = {
     returnPolicy: "Digital products are final sale. All sales are final once delivery is completed. Please review your order carefully before completing purchase.",
     warranty: "All accounts are guaranteed to be as described. If there are any discrepancies, contact support within 24 hours of purchase for resolution.",
     legal: "By completing this purchase, you agree to our Terms of Service and Privacy Policy. All transactions are securely processed.",
-    thankYou: "Thank you for choosing Klassico. We appreciate your business and trust in our platform.",
+    thankYou: "Thank you for choosing Bogatstvo. We appreciate your business and trust in our platform.",
     additionalNotes: "Please keep this receipt for your records. For any questions or concerns, contact our support team.",
   },
 } as const;
